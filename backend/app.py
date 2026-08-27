@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from db import init_db, execute_query
+from email_alert import check_sensor_thresholds, send_email_alert, get_smtp_config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -73,6 +74,13 @@ def receive_water_sensor_data():
             fetchone=True,
             commit=True
         )
+
+        # Evaluate thresholds for SMTP alerts
+        try:
+            check_sensor_thresholds("water", data)
+        except Exception as alert_err:
+            logger.error(f"Error checking water thresholds: {alert_err}")
+
         return jsonify({
             "status": "success",
             "message": "Water sensor data received and saved successfully",
@@ -130,6 +138,13 @@ def receive_air_sensor_data():
             fetchone=True,
             commit=True
         )
+
+        # Evaluate thresholds for SMTP alerts
+        try:
+            check_sensor_thresholds("air", data)
+        except Exception as alert_err:
+            logger.error(f"Error checking air thresholds: {alert_err}")
+
         return jsonify({
             "status": "success",
             "message": "Air sensor data received and saved successfully",
@@ -189,6 +204,13 @@ def receive_pi4_temperature_data():
             fetchone=True,
             commit=True
         )
+
+        # Evaluate thresholds for SMTP alerts
+        try:
+            check_sensor_thresholds("pi4", data)
+        except Exception as alert_err:
+            logger.error(f"Error checking Pi 4 thresholds: {alert_err}")
+
         return jsonify({
             "status": "success",
             "message": "Pi 4 temperature data received and saved successfully",
@@ -324,6 +346,116 @@ def health_check():
             "database_connected": False,
             "error": str(e)
         }), 500
+
+
+# =====================================================
+# SMTP EMAIL ALERT APIs
+# =====================================================
+
+@app.route("/api/alerts/status", methods=["GET"])
+def get_alert_status():
+    """Returns current SMTP alert configuration status (hiding password)."""
+    cfg = get_smtp_config()
+    return jsonify({
+        "status": "success",
+        "smtp_enabled": cfg["enabled"],
+        "smtp_host": cfg["host"],
+        "smtp_port": cfg["port"],
+        "smtp_user": cfg["user"] if cfg["user"] else "Not configured",
+        "sender_email": cfg["sender"],
+        "recipient_emails": cfg["recipients"],
+        "cooldown_minutes": cfg["cooldown_minutes"],
+        "is_configured": bool(cfg["user"] and cfg["password"] and cfg["recipients"])
+    }), 200
+
+
+@app.route("/api/alerts/test-email", methods=["POST"])
+def send_test_email():
+    """Sends a manual test alert email to specified recipient or configured default."""
+    req_data = request.get_json() or {}
+    recipient = req_data.get("to_email") or req_data.get("email")
+    
+    config = get_smtp_config()
+    recipients = [recipient.strip()] if recipient and recipient.strip() else config["recipients"]
+
+    if not recipients:
+        return jsonify({
+            "status": "error",
+            "message": "No recipient email provided or configured in .env (ALERT_RECIPIENT_EMAILS)."
+        }), 400
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    subject = "🔔 [TEST ALERT] SchoolEnv Classroom System Test"
+    
+    text_body = f"""
+==================================================
+SCHOOL ENVIRONMENT MONITORING - EMAIL SYSTEM TEST
+==================================================
+
+This is a test notification from your SchoolEnv Classroom Safety Dashboard.
+
+- Status       : SMTP Gateway Functioning
+- Timestamp    : {now_str}
+- Server Host  : {config['host']}:{config['port']}
+
+Your alert system is ready to notify classroom administrators if environmental parameters exceed safety limits.
+
+--
+SchoolEnv Safety Automation Node
+    """.strip()
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #1e293b; padding: 20px; }}
+    .card {{ background: #ffffff; border-radius: 12px; max-width: 600px; margin: 0 auto; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 6px solid #2563eb; }}
+    .header {{ background: #2563eb; color: white; padding: 20px; font-size: 20px; font-weight: bold; }}
+    .content {{ padding: 24px; }}
+    .badge {{ display: inline-block; background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }}
+    .footer {{ background: #f8fafc; padding: 16px; font-size: 12px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; }}
+</style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">🔔 SchoolEnv Email Alert Test</div>
+        <div class="content">
+            <span class="badge">Test Verified</span>
+            <h2>SMTP Connection Successful</h2>
+            <p>This email confirms that your SMTP gateway is configured and active.</p>
+            <p><strong>Timestamp:</strong> {now_str}</p>
+            <p><strong>Configured Recipients:</strong> {', '.join(recipients)}</p>
+        </div>
+        <div class="footer">
+            SchoolEnv Classroom Environmental Monitoring Node
+        </div>
+    </div>
+</body>
+</html>
+    """.strip()
+
+    # Synchronous attempt for immediate UI feedback on manual button click
+    success = send_email_alert(subject, text_body, html_body, recipient_list=recipients, async_send=False)
+
+    if success:
+        return jsonify({
+            "status": "success",
+            "message": f"Test alert email successfully dispatched to {', '.join(recipients)}!"
+        }), 200
+    else:
+        # Check if missing credentials
+        if not config["user"] or not config["password"]:
+            return jsonify({
+                "status": "warning",
+                "message": "SMTP credentials (SMTP_USER/SMTP_PASSWORD) are not set in backend .env file. Update .env to send real emails."
+            }), 200
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to connect to SMTP server. Please check your SMTP host, port, username, and password in .env."
+            }), 500
+
 
 
 # =====================================================
