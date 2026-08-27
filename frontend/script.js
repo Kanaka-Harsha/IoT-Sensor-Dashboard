@@ -418,6 +418,18 @@ const pi4Chart = new Chart(document.getElementById("pi4Chart"), {
     options: chartOptions
 });
 
+const washroomChart = new Chart(document.getElementById("washroomChart"), {
+    type: "line",
+    data: {
+        labels: [],
+        datasets: [
+            { label: "VOC AQI", data: [], borderColor: "#f59e0b", borderWidth: 2, pointRadius: 2, tension: 0.35 },
+            { label: "Eq. CO₂ (ppm)", data: [], borderColor: "#8b5cf6", borderWidth: 2, pointRadius: 2, tension: 0.35 }
+        ]
+    },
+    options: chartOptions
+});
+
 // ==========================================
 // BACKEND FETCH LOGIC
 // ==========================================
@@ -512,6 +524,19 @@ async function fetchHistoricalTrends() {
                 pi4Chart.data.labels = rows.map(r => new Date(r.timestamp).toLocaleTimeString());
                 pi4Chart.data.datasets[0].data = rows.map(r => r.temperature_c);
                 pi4Chart.update();
+            }
+        }
+
+        // Fetch Washroom Hygiene History
+        const washroomRes = await fetch(`${API_BASE_URL}/api/washroom/hygiene?limit=15`, { headers: FETCH_HEADERS });
+        if (washroomRes.ok) {
+            const washroomJson = await washroomRes.json();
+            if (washroomJson.status === "success" && Array.isArray(washroomJson.data)) {
+                const rows = washroomJson.data.reverse();
+                washroomChart.data.labels = rows.map(r => new Date(r.timestamp).toLocaleTimeString());
+                washroomChart.data.datasets[0].data = rows.map(r => Number(r.voc_aqi) || 0);
+                washroomChart.data.datasets[1].data = rows.map(r => Number(r.eq_co2) || 0);
+                washroomChart.update();
             }
         }
     } catch (err) {

@@ -109,56 +109,6 @@
     </section>
 
 
-    <!-- ================= OVERVIEW ================= -->
-    <section class="overview">
-        <div class="overview-card" data-sensor-type="voc">
-            <div class="card-top-row">
-                <div class="overview-title">Air Quality Index</div>
-                <span class="health-info-badge">ⓘ Impact</span>
-            </div>
-            <div class="overview-score">
-                <span id="airScore">--</span>
-                <small>AQI</small>
-            </div>
-            <div class="overview-status good" id="airOverviewStatus">● Monitoring</div>
-        </div>
-
-        <div class="overview-card" data-sensor-type="ph">
-            <div class="card-top-row">
-                <div class="overview-title">Water pH Balance</div>
-                <span class="health-info-badge">ⓘ Impact</span>
-            </div>
-            <div class="overview-score">
-                <span id="waterScore">--</span>
-                <small>pH</small>
-            </div>
-            <div class="overview-status good" id="waterOverviewStatus">● Optimal</div>
-        </div>
-
-        <div class="overview-card" data-sensor-type="pi4Temp">
-            <div class="card-top-row">
-                <div class="overview-title">Pi 4 Node Temp</div>
-                <span class="health-info-badge">ⓘ Impact</span>
-            </div>
-            <div class="overview-score">
-                <span id="pi4Score">--</span>
-                <small>°C</small>
-            </div>
-            <div class="overview-status" id="pi4OverviewStatus">Active</div>
-        </div>
-
-        <div class="overview-card" data-sensor-type="washroomVoc">
-            <div class="card-top-row">
-                <div class="overview-title">Washroom Hygiene</div>
-                <span class="health-info-badge">ⓘ Impact</span>
-            </div>
-            <div class="overview-score">
-                <span id="washroomScore">--</span>
-                <small>AQI</small>
-            </div>
-            <div class="overview-status" id="washroomOverviewStatus">● Monitoring</div>
-        </div>
-    </section>
 
 
     <!-- ================= AIR QUALITY ================= -->
@@ -656,6 +606,19 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="pi4Chart"></canvas>
+                </div>
+            </div>
+
+            <!-- WASHROOM CHART -->
+            <div class="chart-card">
+                <div class="chart-title">
+                    <div>
+                        <h3>Washroom Hygiene Trend</h3>
+                        <p>VOC AQI & Equivalent CO₂</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="washroomChart"></canvas>
                 </div>
             </div>
         </div>
