@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnviroSense | Monitoring Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">E</div>
+        <div>
+            <h2>EnviroSense</h2>
+            <span>Monitoring System</span>
+        </div>
+    </div>
+
+    <nav>
+        <a href="#" class="nav-link active">
+            <span>⌂</span>
+            Dashboard
+        </a>
+        <a href="#air" class="nav-link">
+            <span>◌</span>
+            Air Quality
+        </a>
+        <a href="#water" class="nav-link">
+            <span>◉</span>
+            Water Quality
+        </a>
+        <a href="#pi4" class="nav-link">
+            <span>🥧</span>
+            Pi 4 Temp
+        </a>
+        <a href="#analytics" class="nav-link">
+            <span>▥</span>
+            Analytics
+        </a>
+        <a href="#alerts" class="nav-link">
+            <span>!</span>
+            Alerts
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <div class="connection-status">
+            <span class="online-dot" id="systemDot"></span>
+            <div>
+                <strong id="systemStatusText">System Connected</strong>
+                <small id="systemStatusSub">Live backend link</small>
+            </div>
+        </div>
+    </div>
+</aside>
+
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+
+    <!-- HEADER -->
+    <header class="header">
+        <div>
+            <h1>Environmental Monitoring</h1>
+            <p>Real-time air, water, and Pi 4 sensor metrics</p>
+        </div>
+
+        <div class="header-info">
+            <div class="live" id="liveBadge">
+                <span></span>
+                LIVE
+            </div>
+            <div id="currentTime">
+                00:00:00
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ================= SYSTEM STATUS ================= -->
+    <section class="system-status">
+        <div class="status-item">
+            <span class="status-label">NODES</span>
+            <strong>ESP32 Air & Water + Pi 4</strong>
+        </div>
+
+        <div class="status-item">
+            <span class="status-label">BACKEND CONNECTION</span>
+            <strong class="green" id="connectionStatusText">● Online</strong>
+        </div>
+
+        <div class="status-item">
+            <span class="status-label">ACTIVE DB TABLES</span>
+            <strong id="activeTablesCount">3 / 3 Active</strong>
+        </div>
+
+        <div class="status-item">
+            <span class="status-label">LAST UPDATE</span>
+            <strong id="lastUpdate">--</strong>
+        </div>
+    </section>
+
+
+    <!-- ================= OVERVIEW ================= -->
+    <section class="overview">
+        <div class="overview-card">
+            <div class="overview-title">Air Quality Index</div>
+            <div class="overview-score">
+                <span id="airScore">--</span>
+                <small>AQI</small>
+            </div>
+            <div class="overview-status good" id="airOverviewStatus">● Monitoring</div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-title">Water pH Balance</div>
+            <div class="overview-score">
+                <span id="waterScore">--</span>
+                <small>pH</small>
+            </div>
+            <div class="overview-status good" id="waterOverviewStatus">● Optimal</div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-title">Pi 4 Node Temp</div>
+            <div class="overview-score">
+                <span id="pi4Score">--</span>
+                <small>°C</small>
+            </div>
+            <div class="overview-status" id="pi4OverviewStatus">Active</div>
+        </div>
+    </section>
+
+
+    <!-- ================= AIR QUALITY ================= -->
+    <section class="section" id="air">
+        <div class="section-header">
+            <div>
+                <h2>Air Quality</h2>
+                <p>Real-time environmental air parameters from backend</p>
+            </div>
+            <span class="section-badge">AIR</span>
+        </div>
+
+        <div class="sensor-grid">
+
+            <!-- CO2 -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>CO₂</h3>
+                        <span>Carbon Dioxide</span>
+                    </div>
+                    <div class="sensor-icon">CO₂</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="co2">--</strong>
+                    <span>ppm</span>
+                </div>
+                <div class="progress">
+                    <div id="co2Bar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Air concentration</span>
+                    <strong id="co2Status" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- PM2.5 -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>PM2.5</h3>
+                        <span>Particulate Matter</span>
+                    </div>
+                    <div class="sensor-icon">PM</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="pm25">--</strong>
+                    <span>µg/m³</span>
+                </div>
+                <div class="progress">
+                    <div id="pmBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Fine particles</span>
+                    <strong id="pmStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- PM10 -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>PM10</h3>
+                        <span>Coarse Particles</span>
+                    </div>
+                    <div class="sensor-icon">PM</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="pm10">--</strong>
+                    <span>µg/m³</span>
+                </div>
+                <div class="progress">
+                    <div id="pm10Bar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Coarse particles</span>
+                    <strong id="pm10Status" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- AQI -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>AQI / VOC</h3>
+                        <span>Air Quality Index</span>
+                    </div>
+                    <div class="sensor-icon">AQI</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="voc">--</strong>
+                    <span>index</span>
+                </div>
+                <div class="progress">
+                    <div id="vocBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Quality Index</span>
+                    <strong id="vocStatus" class="status-good">● Good</strong>
+                </div>
+            </div>
+
+            <!-- TEMPERATURE -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Air Temperature</h3>
+                        <span>Environmental Temp</span>
+                    </div>
+                    <div class="sensor-icon">°C</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="airTemp">--</strong>
+                    <span>°C</span>
+                </div>
+                <div class="progress">
+                    <div id="airTempBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Air temperature</span>
+                    <strong id="airTempStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- HUMIDITY -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Humidity</h3>
+                        <span>Relative Humidity</span>
+                    </div>
+                    <div class="sensor-icon">%</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="humidity">--</strong>
+                    <span>%</span>
+                </div>
+                <div class="progress">
+                    <div id="humidityBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Relative humidity</span>
+                    <strong id="humidityStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- ================= WATER QUALITY ================= -->
+    <section class="section" id="water">
+        <div class="section-header">
+            <div>
+                <h2>Water Quality</h2>
+                <p>Real-time water quality metrics from backend</p>
+            </div>
+            <span class="section-badge water">WATER</span>
+        </div>
+
+        <div class="sensor-grid">
+
+            <!-- PH -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>pH</h3>
+                        <span>Acidity Sensor</span>
+                    </div>
+                    <div class="sensor-icon">pH</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="ph">--</strong>
+                    <span>pH</span>
+                </div>
+                <div class="ph-bar">
+                    <div id="phIndicator"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Acidity level</span>
+                    <strong id="phStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- TDS -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>TDS</h3>
+                        <span>Total Dissolved Solids</span>
+                    </div>
+                    <div class="sensor-icon">TDS</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="tds">--</strong>
+                    <span>ppm</span>
+                </div>
+                <div class="progress">
+                    <div id="tdsBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Dissolved solids</span>
+                    <strong id="tdsStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- TURBIDITY -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Turbidity</h3>
+                        <span>Water Clarity</span>
+                    </div>
+                    <div class="sensor-icon">NTU</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="turbidity">--</strong>
+                    <span>NTU / raw</span>
+                </div>
+                <div class="progress">
+                    <div id="turbidityBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Water clarity</span>
+                    <strong id="turbidityStatus" class="status-good">● Good</strong>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- ================= RASPBERRY PI 4 ================= -->
+    <section class="section" id="pi4">
+        <div class="section-header">
+            <div>
+                <h2>Raspberry Pi 4 Node</h2>
+                <p>Dedicated Pi 4 temperature telemetry</p>
+            </div>
+            <span class="section-badge">PI 4</span>
+        </div>
+
+        <div class="sensor-grid">
+            <!-- PI 4 TEMP -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Pi 4 Temperature</h3>
+                        <span>CPU / Sensor Temp</span>
+                    </div>
+                    <div class="sensor-icon">°C</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="pi4Temp">--</strong>
+                    <span>°C</span>
+                </div>
+                <div class="progress">
+                    <div id="pi4TempBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>System Temperature</span>
+                    <strong id="pi4TempStatus" class="status-good">● Online</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ================= ANALYTICS ================= -->
+    <section class="section" id="analytics">
+        <div class="section-header">
+            <div>
+                <h2>Live Trends</h2>
+                <p>Real-time sensor historical data from backend</p>
+            </div>
+            <span class="live-label">● LIVE</span>
+        </div>
+
+        <div class="charts">
+            <!-- AIR CHART -->
+            <div class="chart-card">
+                <div class="chart-title">
+                    <div>
+                        <h3>Air Quality Trends</h3>
+                        <p>CO₂ & Temperature</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="airChart"></canvas>
+                </div>
+            </div>
+
+            <!-- WATER CHART -->
+            <div class="chart-card">
+                <div class="chart-title">
+                    <div>
+                        <h3>Water Quality Trends</h3>
+                        <p>pH & TDS</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="waterChart"></canvas>
+                </div>
+            </div>
+
+            <!-- PI 4 CHART -->
+            <div class="chart-card">
+                <div class="chart-title">
+                    <div>
+                        <h3>Raspberry Pi 4 Temp Trend</h3>
+                        <p>Temperature over time (°C)</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="pi4Chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ================= ALERTS ================= -->
+    <section class="alert-section" id="alerts">
+        <div>
+            <h3>System Status</h3>
+            <p id="alertDescription">
+                All connected backend sensor tables are receiving data normally.
+            </p>
+        </div>
+        <div class="system-ok" id="systemOkBadge">
+            ● All Systems Normal
+        </div>
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <span>EnviroSense Monitoring System</span>
+        <span>ESP32 & Raspberry Pi 4 • Live Backend Link</span>
+    </footer>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
