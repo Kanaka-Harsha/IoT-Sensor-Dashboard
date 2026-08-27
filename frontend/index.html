@@ -3,689 +3,561 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SchoolEnv | Monitoring Dashboard</title>
+    <title>SchoolEnv | Classroom Safety Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="cockpit-body">
 
-<!-- ================= SIDEBAR ================= -->
-<aside class="sidebar">
-    <div class="brand">
-        <div class="brand-icon">E</div>
-        <div>
-            <h2>SchoolEnv</h2>
-            <span>Environmental Impact On School Students</span>
+<!-- ================= TOP NAVIGATION & CONTROLS ================= -->
+<header class="top-nav">
+    <div class="top-nav-left">
+        <div class="brand-badge">
+            <span class="brand-logo">E</span>
+            <div>
+                <h1>SchoolEnv</h1>
+                <p>Classroom Environmental Safety</p>
+            </div>
+        </div>
+
+        <div class="top-status-group">
+            <div class="status-pill">
+                <span class="pulse-dot" id="systemDot"></span>
+                <span id="connectionStatusText">● Online</span>
+            </div>
+            <div class="status-pill table-pill">
+                <span id="activeTablesCount">4 / 4 Nodes Active</span>
+            </div>
+            <div class="status-pill update-pill">
+                <span id="lastUpdate">Updated: Just now</span>
+            </div>
         </div>
     </div>
 
-    <nav>
-        <a href="#" class="nav-link active">
-            <span>⌂</span>
-            Dashboard
-        </a>
-        <a href="#air" class="nav-link">
-            <span>◌</span>
-            Air Quality
-        </a>
-        <a href="#water" class="nav-link">
-            <span>◉</span>
-            Water Quality
-        </a>
-        <a href="#pi4" class="nav-link">
-            <span>🪧</span>
-            Pi 4 Temp
-        </a>
-        <a href="#washroom" class="nav-link">
-            <span>🚿</span>
-            Washroom
-        </a>
-        <a href="#analytics" class="nav-link">
-            <span>▥</span>
-            Analytics
-        </a>
-        <a href="#alerts" class="nav-link">
-            <span>!</span>
-            Alerts
-        </a>
-    </nav>
+    <!-- TOP CORNER ACTION BUTTONS -->
+    <div class="top-nav-right">
+        <button id="btnOpenAnalytics" class="top-action-btn btn-analytics" title="Open Analytics & Historical Trend Charts">
+            <span>📊</span>
+            <strong>Graphs & Trends</strong>
+        </button>
 
-    <div class="sidebar-bottom">
-        <div class="connection-status">
-            <span class="online-dot" id="systemDot"></span>
-            <div>
-                <strong id="systemStatusText">System Connected</strong>
-                <small id="systemStatusSub">Live backend link</small>
-            </div>
-        </div>
+        <button id="btnOpenEmailAlerts" class="top-action-btn btn-alerts" title="Configure Real-time SMTP Email Alerts">
+            <span>✉️</span>
+            <strong>Alert Settings</strong>
+            <span class="btn-status-badge" id="smtpStatusBadge">Active</span>
+        </button>
     </div>
-</aside>
+</header>
 
+<!-- ================= 100VH 4-QUADRANT SENSOR COCKPIT ================= -->
+<main class="cockpit-grid">
 
-<!-- ================= MAIN ================= -->
-<main class="main">
-
-    <!-- HEADER -->
-    <header class="header">
-        <div>
-            <h1>School Environment Monitoring</h1>
-            <p>Real-time air, water, Pi 4 & washroom hygiene sensor metrics</p>
-        </div>
-
-        <div class="header-info">
-            <div class="live" id="liveBadge">
-                <span></span>
-                LIVE
+    <!-- 1. AIR QUALITY SECTION -->
+    <section class="node-panel" id="air">
+        <div class="panel-header air-header">
+            <div class="panel-title-wrap">
+                <span class="panel-icon">🍃</span>
+                <div>
+                    <h2>Air Quality</h2>
+                    <span class="panel-sub">Classroom Air Safety</span>
+                </div>
             </div>
-            <div id="currentTime">
-                00:00:00
-            </div>
-        </div>
-    </header>
-
-
-    <!-- ================= SYSTEM STATUS ================= -->
-    <section class="system-status">
-        <div class="status-item">
-            <span class="status-label">NODES</span>
-            <strong>ESP32 Air, Water & Washroom + Pi 4</strong>
-        </div>
-
-        <div class="status-item">
-            <span class="status-label">BACKEND CONNECTION</span>
-            <strong class="green" id="connectionStatusText">● Online</strong>
-        </div>
-
-        <div class="status-item">
-            <span class="status-label">ACTIVE DB TABLES</span>
-            <strong id="activeTablesCount">4 / 4 Active</strong>
-        </div>
-
-        <div class="status-item">
-            <span class="status-label">LAST UPDATE</span>
-            <strong id="lastUpdate">--</strong>
-        </div>
-    </section>
-
-
-
-
-    <!-- ================= AIR QUALITY ================= -->
-    <section class="section" id="air">
-        <div class="section-header">
-            <div>
-                <h2>Air Quality</h2>
-                <p>Real-time environmental air parameters from backend</p>
-            </div>
-            <div class="section-header-right">
-                <span class="node-timestamp" id="airTimestamp">Last reading: --</span>
-                <span class="section-badge">AIR • ESP Node 1</span>
+            <div class="panel-header-meta">
+                <span class="node-timestamp" id="airTimestamp">⏱️ Last: --</span>
+                <span class="panel-badge badge-air">Node 1</span>
             </div>
         </div>
 
-        <div class="sensor-grid">
-
+        <div class="panel-sensor-grid grid-air">
             <!-- CO2 -->
-            <div class="sensor-card" data-sensor-type="co2">
-                <div class="sensor-header">
-                    <div>
-                        <h3>CO₂ <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Carbon Dioxide</span>
-                    </div>
-                    <div class="sensor-icon">CO₂</div>
+            <div class="compact-card" data-sensor-type="co2">
+                <div class="compact-card-header">
+                    <span>CO₂</span>
+                    <span class="health-info-badge">ⓘ</span>
                 </div>
-                <div class="sensor-value">
+                <div class="compact-value">
                     <strong id="co2">--</strong>
-                    <span>ppm</span>
+                    <small>ppm</small>
                 </div>
-                <div class="progress">
+                <div class="compact-progress">
                     <div id="co2Bar"></div>
                 </div>
-                <div class="sensor-footer">
-                    <span>Air concentration</span>
-                    <strong id="co2Status" class="status-good">● Normal</strong>
+                <div class="compact-footer">
+                    <span id="co2Status" class="status-good">● Normal</span>
                 </div>
             </div>
 
             <!-- PM2.5 -->
-            <div class="sensor-card" data-sensor-type="pm25">
-                <div class="sensor-header">
-                    <div>
-                        <h3>PM2.5 <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Particulate Matter</span>
-                    </div>
-                    <div class="sensor-icon">PM</div>
+            <div class="compact-card" data-sensor-type="pm25">
+                <div class="compact-card-header">
+                    <span>PM2.5</span>
+                    <span class="health-info-badge">ⓘ</span>
                 </div>
-                <div class="sensor-value">
+                <div class="compact-value">
                     <strong id="pm25">--</strong>
-                    <span>µg/m³</span>
+                    <small>µg/m³</small>
                 </div>
-                <div class="progress">
+                <div class="compact-progress">
                     <div id="pmBar"></div>
                 </div>
-                <div class="sensor-footer">
-                    <span>Fine particles</span>
-                    <strong id="pmStatus" class="status-good">● Normal</strong>
+                <div class="compact-footer">
+                    <span id="pmStatus" class="status-good">● Normal</span>
                 </div>
             </div>
 
             <!-- PM10 -->
-            <div class="sensor-card" data-sensor-type="pm10">
-                <div class="sensor-header">
-                    <div>
-                        <h3>PM10 <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Coarse Particles</span>
-                    </div>
-                    <div class="sensor-icon">PM</div>
+            <div class="compact-card" data-sensor-type="pm10">
+                <div class="compact-card-header">
+                    <span>PM10</span>
+                    <span class="health-info-badge">ⓘ</span>
                 </div>
-                <div class="sensor-value">
+                <div class="compact-value">
                     <strong id="pm10">--</strong>
-                    <span>µg/m³</span>
+                    <small>µg/m³</small>
                 </div>
-                <div class="progress">
+                <div class="compact-progress">
                     <div id="pm10Bar"></div>
                 </div>
-                <div class="sensor-footer">
-                    <span>Coarse particles</span>
-                    <strong id="pm10Status" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- AQI -->
-            <div class="sensor-card" data-sensor-type="voc">
-                <div class="sensor-header">
-                    <div>
-                        <h3>AQI / VOC <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Air Quality Index</span>
-                    </div>
-                    <div class="sensor-icon">AQI</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="voc">--</strong>
-                    <span>index</span>
-                </div>
-                <div class="progress">
-                    <div id="vocBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Quality Index</span>
-                    <strong id="vocStatus" class="status-good">● Good</strong>
-                </div>
-            </div>
-
-            <!-- TEMPERATURE -->
-            <div class="sensor-card" data-sensor-type="airTemp">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Air Temperature <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Environmental Temp</span>
-                    </div>
-                    <div class="sensor-icon">°C</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="airTemp">--</strong>
-                    <span>°C</span>
-                </div>
-                <div class="progress">
-                    <div id="airTempBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Air temperature</span>
-                    <strong id="airTempStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- HUMIDITY -->
-            <div class="sensor-card" data-sensor-type="humidity">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Humidity <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Relative Humidity</span>
-                    </div>
-                    <div class="sensor-icon">%</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="humidity">--</strong>
-                    <span>%</span>
-                </div>
-                <div class="progress">
-                    <div id="humidityBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Relative humidity</span>
-                    <strong id="humidityStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-
-    <!-- ================= WATER QUALITY ================= -->
-    <section class="section" id="water">
-        <div class="section-header">
-            <div>
-                <h2>Water Quality</h2>
-                <p>Real-time water quality metrics from backend</p>
-            </div>
-            <div class="section-header-right">
-                <span class="node-timestamp" id="waterTimestamp">Last reading: --</span>
-                <span class="section-badge water">WATER • ESP Node 2</span>
-            </div>
-        </div>
-
-        <div class="sensor-grid">
-
-            <!-- PH -->
-            <div class="sensor-card" data-sensor-type="ph">
-                <div class="sensor-header">
-                    <div>
-                        <h3>pH <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Acidity Sensor</span>
-                    </div>
-                    <div class="sensor-icon">pH</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="ph">--</strong>
-                    <span>pH</span>
-                </div>
-                <div class="ph-bar">
-                    <div id="phIndicator"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Acidity level</span>
-                    <strong id="phStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- TDS -->
-            <div class="sensor-card" data-sensor-type="tds">
-                <div class="sensor-header">
-                    <div>
-                        <h3>TDS <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Total Dissolved Solids</span>
-                    </div>
-                    <div class="sensor-icon">TDS</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="tds">--</strong>
-                    <span>ppm</span>
-                </div>
-                <div class="progress">
-                    <div id="tdsBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Dissolved solids</span>
-                    <strong id="tdsStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- TURBIDITY -->
-            <div class="sensor-card" data-sensor-type="turbidity">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Turbidity <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Water Clarity</span>
-                    </div>
-                    <div class="sensor-icon">NTU</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="turbidity">--</strong>
-                    <span>NTU / raw</span>
-                </div>
-                <div class="progress">
-                    <div id="turbidityBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Water clarity</span>
-                    <strong id="turbidityStatus" class="status-good">● Good</strong>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-
-    <!-- ================= RASPBERRY PI 4 ================= -->
-    <section class="section" id="pi4">
-        <div class="section-header">
-            <div>
-                <h2>Raspberry Pi 4 Node</h2>
-                <p>Real-time Pi 4 environmental telemetry (BME680 suite)</p>
-            </div>
-            <div class="section-header-right">
-                <span class="node-timestamp" id="pi4Timestamp">Last reading: --</span>
-                <span class="section-badge">PI 4 SENSORS</span>
-            </div>
-        </div>
-
-        <div class="sensor-grid">
-            <!-- PI 4 TEMP -->
-            <div class="sensor-card" data-sensor-type="pi4Temp">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Pi 4 Temp <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Node Hardware Temp</span>
-                    </div>
-                    <div class="sensor-icon">°C</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="pi4Temp">--</strong>
-                    <span>°C</span>
-                </div>
-                <div class="progress">
-                    <div id="pi4TempBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>System Temperature</span>
-                    <strong id="pi4TempStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- PI 4 HUMIDITY -->
-            <div class="sensor-card" data-sensor-type="pi4Humidity">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Pi 4 Humidity <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Node Relative Humidity</span>
-                    </div>
-                    <div class="sensor-icon">%</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="pi4Humidity">--</strong>
-                    <span>%</span>
-                </div>
-                <div class="progress">
-                    <div id="pi4HumidityBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Relative moisture</span>
-                    <strong id="pi4HumidityStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- BAROMETRIC PRESSURE -->
-            <div class="sensor-card" data-sensor-type="pi4Pressure">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Pressure <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Barometric Pressure</span>
-                    </div>
-                    <div class="sensor-icon">hPa</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="pi4Pressure">--</strong>
-                    <span>hPa</span>
-                </div>
-                <div class="progress">
-                    <div id="pi4PressureBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Atmospheric pressure</span>
-                    <strong id="pi4PressureStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- GAS RESISTANCE -->
-            <div class="sensor-card" data-sensor-type="pi4Gas">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Gas Resistance <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>VOC Gas Sensor</span>
-                    </div>
-                    <div class="sensor-icon">kΩ</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="pi4Gas">--</strong>
-                    <span>kΩ / Ω</span>
-                </div>
-                <div class="progress">
-                    <div id="pi4GasBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Gas sensor resistance</span>
-                    <strong id="pi4GasStatus" class="status-good">● Optimal</strong>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    <!-- ================= WASHROOM HYGIENE ================= -->
-    <section class="section" id="washroom">
-        <div class="section-header">
-            <div>
-                <h2>Washroom Hygiene</h2>
-                <p>Real-time washroom air quality & odor monitoring (ESP Node 3)</p>
-            </div>
-            <div class="section-header-right">
-                <span class="node-timestamp" id="washroomTimestamp">Last reading: --</span>
-                <span class="section-badge washroom">WASHROOM • ESP Node 3</span>
-            </div>
-        </div>
-
-        <div class="sensor-grid">
-
-            <!-- GAS SENSOR -->
-            <div class="sensor-card" data-sensor-type="washroomGas">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Gas Sensor <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Airborne Contaminant Detector</span>
-                    </div>
-                    <div class="sensor-icon washroom-icon">GAS</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="washroomGas">--</strong>
-                    <span>raw</span>
-                </div>
-                <div class="progress">
-                    <div id="washroomGasBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Gas contamination level</span>
-                    <strong id="washroomGasStatus" class="status-good">● Normal</strong>
-                </div>
-            </div>
-
-            <!-- SMELL INDEX -->
-            <div class="sensor-card" data-sensor-type="washroomSmell">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Smell Index <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Odor Intensity Level</span>
-                    </div>
-                    <div class="sensor-icon washroom-icon">👃</div>
-                </div>
-                <div class="sensor-value">
-                    <strong id="washroomSmell">--</strong>
-                    <span>index</span>
-                </div>
-                <div class="progress">
-                    <div id="washroomSmellBar"></div>
-                </div>
-                <div class="sensor-footer">
-                    <span>Odor intensity</span>
-                    <strong id="washroomSmellStatus" class="status-good">● Clean</strong>
+                <div class="compact-footer">
+                    <span id="pm10Status" class="status-good">● Normal</span>
                 </div>
             </div>
 
             <!-- VOC AQI -->
-            <div class="sensor-card" data-sensor-type="washroomVoc">
-                <div class="sensor-header">
-                    <div>
-                        <h3>VOC AQI <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Volatile Organic Air Quality</span>
-                    </div>
-                    <div class="sensor-icon washroom-icon">AQI</div>
+            <div class="compact-card" data-sensor-type="voc">
+                <div class="compact-card-header">
+                    <span>AQI / VOC</span>
+                    <span class="health-info-badge">ⓘ</span>
                 </div>
-                <div class="sensor-value">
-                    <strong id="washroomVoc">--</strong>
-                    <span>AQI</span>
+                <div class="compact-value">
+                    <strong id="voc">--</strong>
+                    <small>AQI</small>
                 </div>
-                <div class="progress">
-                    <div id="washroomVocBar"></div>
+                <div class="compact-progress">
+                    <div id="vocBar"></div>
                 </div>
-                <div class="sensor-footer">
-                    <span>Air quality index</span>
-                    <strong id="washroomVocStatus" class="status-good">● Good</strong>
+                <div class="compact-footer">
+                    <span id="vocStatus" class="status-good">● Good</span>
                 </div>
             </div>
 
-            <!-- EQUIVALENT CO2 -->
-            <div class="sensor-card" data-sensor-type="washroomEco2">
-                <div class="sensor-header">
-                    <div>
-                        <h3>Eq. CO₂ <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>Equivalent Carbon Dioxide</span>
-                    </div>
-                    <div class="sensor-icon washroom-icon">eCO₂</div>
+            <!-- Air Temp -->
+            <div class="compact-card" data-sensor-type="airTemp">
+                <div class="compact-card-header">
+                    <span>Air Temp</span>
+                    <span class="health-info-badge">ⓘ</span>
                 </div>
-                <div class="sensor-value">
-                    <strong id="washroomEco2">--</strong>
-                    <span>ppm</span>
+                <div class="compact-value">
+                    <strong id="airTemp">--</strong>
+                    <small>°C</small>
                 </div>
-                <div class="progress">
-                    <div id="washroomEco2Bar"></div>
+                <div class="compact-progress">
+                    <div id="airTempBar"></div>
                 </div>
-                <div class="sensor-footer">
-                    <span>Equivalent CO₂ level</span>
-                    <strong id="washroomEco2Status" class="status-good">● Normal</strong>
+                <div class="compact-footer">
+                    <span id="airTempStatus" class="status-good">● Normal</span>
                 </div>
             </div>
 
+            <!-- Humidity -->
+            <div class="compact-card" data-sensor-type="humidity">
+                <div class="compact-card-header">
+                    <span>Humidity</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="humidity">--</strong>
+                    <small>%</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="humidityBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="humidityStatus" class="status-good">● Normal</span>
+                </div>
+            </div>
         </div>
     </section>
 
-
-    <!-- ================= ANALYTICS ================= -->
-    <section class="section" id="analytics">
-        <div class="section-header">
-            <div>
-                <h2>Live Trends</h2>
-                <p>Real-time sensor historical data from backend</p>
+    <!-- 2. WATER QUALITY SECTION -->
+    <section class="node-panel" id="water">
+        <div class="panel-header water-header">
+            <div class="panel-title-wrap">
+                <span class="panel-icon">💧</span>
+                <div>
+                    <h2>Water Quality</h2>
+                    <span class="panel-sub">Drinking Water Purity</span>
+                </div>
             </div>
-            <span class="live-label">● LIVE</span>
+            <div class="panel-header-meta">
+                <span class="node-timestamp" id="waterTimestamp">⏱️ Last: --</span>
+                <span class="panel-badge badge-water">Node 2</span>
+            </div>
         </div>
 
-        <div class="charts">
-            <!-- AIR CHART -->
-            <div class="chart-card">
-                <div class="chart-title">
-                    <div>
-                        <h3>Air Quality Trends</h3>
-                        <p>CO₂ & Temperature</p>
+        <div class="panel-sensor-grid grid-water">
+            <!-- pH -->
+            <div class="compact-card" data-sensor-type="ph">
+                <div class="compact-card-header">
+                    <span>pH Balance</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="ph">--</strong>
+                    <small>pH</small>
+                </div>
+                <div class="ph-bar-wrap">
+                    <div class="ph-bar-line">
+                        <div id="phIndicator"></div>
                     </div>
                 </div>
-                <div class="chart-container">
+                <div class="compact-footer">
+                    <span id="phStatus" class="status-good">● Optimal</span>
+                </div>
+            </div>
+
+            <!-- TDS -->
+            <div class="compact-card" data-sensor-type="tds">
+                <div class="compact-card-header">
+                    <span>Total Dissolved Solids</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="tds">--</strong>
+                    <small>ppm</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="tdsBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="tdsStatus" class="status-good">● Pure</span>
+                </div>
+            </div>
+
+            <!-- Turbidity -->
+            <div class="compact-card" data-sensor-type="turbidity">
+                <div class="compact-card-header">
+                    <span>Turbidity (Clarity)</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="turbidity">--</strong>
+                    <small>NTU</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="turbidityBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="turbidityStatus" class="status-good">● Clear</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. RASPBERRY PI 4 NODE -->
+    <section class="node-panel" id="pi4">
+        <div class="panel-header pi4-header">
+            <div class="panel-title-wrap">
+                <span class="panel-icon">🥧</span>
+                <div>
+                    <h2>Raspberry Pi 4</h2>
+                    <span class="panel-sub">BME680 Telemetry</span>
+                </div>
+            </div>
+            <div class="panel-header-meta">
+                <span class="node-timestamp" id="pi4Timestamp">⏱️ Last: --</span>
+                <span class="panel-badge badge-pi4">Pi Node</span>
+            </div>
+        </div>
+
+        <div class="panel-sensor-grid grid-pi4">
+            <!-- Pi 4 Temp -->
+            <div class="compact-card" data-sensor-type="pi4Temp">
+                <div class="compact-card-header">
+                    <span>Node Temp</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="pi4Temp">--</strong>
+                    <small>°C</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="pi4TempBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="pi4TempStatus" class="status-good">● Active</span>
+                </div>
+            </div>
+
+            <!-- Pi 4 Humidity -->
+            <div class="compact-card" data-sensor-type="pi4Humidity">
+                <div class="compact-card-header">
+                    <span>Pi Humidity</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="pi4Humidity">--</strong>
+                    <small>%</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="pi4HumidityBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="pi4HumidityStatus" class="status-good">● Normal</span>
+                </div>
+            </div>
+
+            <!-- Barometric Pressure -->
+            <div class="compact-card" data-sensor-type="pi4Pressure">
+                <div class="compact-card-header">
+                    <span>Pressure</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="pi4Pressure">--</strong>
+                    <small>hPa</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="pi4PressureBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="pi4PressureStatus" class="status-good">● Normal</span>
+                </div>
+            </div>
+
+            <!-- Gas Resistance -->
+            <div class="compact-card" data-sensor-type="pi4Gas">
+                <div class="compact-card-header">
+                    <span>Gas Resistance</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="pi4Gas">--</strong>
+                    <small>kΩ</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="pi4GasBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="pi4GasStatus" class="status-good">● Optimal</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. WASHROOM HYGIENE SECTION -->
+    <section class="node-panel" id="washroom">
+        <div class="panel-header washroom-header">
+            <div class="panel-title-wrap">
+                <span class="panel-icon">🚿</span>
+                <div>
+                    <h2>Washroom Hygiene</h2>
+                    <span class="panel-sub">Odor & Ventilation</span>
+                </div>
+            </div>
+            <div class="panel-header-meta">
+                <span class="node-timestamp" id="washroomTimestamp">⏱️ Last: --</span>
+                <span class="panel-badge badge-washroom">Node 3</span>
+            </div>
+        </div>
+
+        <div class="panel-sensor-grid grid-washroom">
+            <!-- Gas Sensor -->
+            <div class="compact-card" data-sensor-type="washroomGas">
+                <div class="compact-card-header">
+                    <span>Gas Sensor</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="washroomGas">--</strong>
+                    <small>raw</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="washroomGasBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="washroomGasStatus" class="status-good">● Clean</span>
+                </div>
+            </div>
+
+            <!-- Smell Index -->
+            <div class="compact-card" data-sensor-type="washroomSmell">
+                <div class="compact-card-header">
+                    <span>Smell Index</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="washroomSmell">--</strong>
+                    <small>index</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="washroomSmellBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="washroomSmellStatus" class="status-good">● Fresh</span>
+                </div>
+            </div>
+
+            <!-- VOC AQI -->
+            <div class="compact-card" data-sensor-type="washroomVoc">
+                <div class="compact-card-header">
+                    <span>Washroom VOC</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="washroomVoc">--</strong>
+                    <small>AQI</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="washroomVocBar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="washroomVocStatus" class="status-good">● Good</span>
+                </div>
+            </div>
+
+            <!-- Eq. CO2 -->
+            <div class="compact-card" data-sensor-type="washroomEco2">
+                <div class="compact-card-header">
+                    <span>Eq. CO₂</span>
+                    <span class="health-info-badge">ⓘ</span>
+                </div>
+                <div class="compact-value">
+                    <strong id="washroomEco2">--</strong>
+                    <small>ppm</small>
+                </div>
+                <div class="compact-progress">
+                    <div id="washroomEco2Bar"></div>
+                </div>
+                <div class="compact-footer">
+                    <span id="washroomEco2Status" class="status-good">● Normal</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ================= MODAL: ANALYTICS & TRENDS ================= -->
+<div id="analyticsModal" class="modal-overlay hidden">
+    <div class="modal-card modal-large">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-icon">📊</span>
+                <div>
+                    <h3>Sensor Historical Trends & Analytics</h3>
+                    <p>Live chronological sensor graphs from backend database</p>
+                </div>
+            </div>
+            <button id="btnCloseAnalytics" class="btn-close-modal">✕</button>
+        </div>
+
+        <div class="modal-body charts-modal-grid">
+            <!-- Air Chart -->
+            <div class="modal-chart-box">
+                <div class="chart-box-header">
+                    <h4>Air Quality Trends</h4>
+                    <span>CO₂ (ppm) & Temp (°C)</span>
+                </div>
+                <div class="modal-canvas-wrap">
                     <canvas id="airChart"></canvas>
                 </div>
             </div>
 
-            <!-- WATER CHART -->
-            <div class="chart-card">
-                <div class="chart-title">
-                    <div>
-                        <h3>Water Quality Trends</h3>
-                        <p>pH & TDS</p>
-                    </div>
+            <!-- Water Chart -->
+            <div class="modal-chart-box">
+                <div class="chart-box-header">
+                    <h4>Water Quality Trends</h4>
+                    <span>pH & TDS (ppm)</span>
                 </div>
-                <div class="chart-container">
+                <div class="modal-canvas-wrap">
                     <canvas id="waterChart"></canvas>
                 </div>
             </div>
 
-            <!-- PI 4 CHART -->
-            <div class="chart-card">
-                <div class="chart-title">
-                    <div>
-                        <h3>Raspberry Pi 4 Temp Trend</h3>
-                        <p>Temperature over time (°C)</p>
-                    </div>
+            <!-- Pi 4 Chart -->
+            <div class="modal-chart-box">
+                <div class="chart-box-header">
+                    <h4>Raspberry Pi 4 Temp Trend</h4>
+                    <span>Hardware Temp (°C)</span>
                 </div>
-                <div class="chart-container">
+                <div class="modal-canvas-wrap">
                     <canvas id="pi4Chart"></canvas>
                 </div>
             </div>
 
-            <!-- WASHROOM CHART -->
-            <div class="chart-card">
-                <div class="chart-title">
-                    <div>
-                        <h3>Washroom Hygiene Trend</h3>
-                        <p>VOC AQI & Equivalent CO₂</p>
-                    </div>
+            <!-- Washroom Chart -->
+            <div class="modal-chart-box">
+                <div class="chart-box-header">
+                    <h4>Washroom Hygiene Trends</h4>
+                    <span>VOC AQI & Eq. CO₂ (ppm)</span>
                 </div>
-                <div class="chart-container">
+                <div class="modal-canvas-wrap">
                     <canvas id="washroomChart"></canvas>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</div>
 
-
-    <!-- ================= ALERTS & EMAIL NOTIFICATIONS ================= -->
-    <section class="section" id="alerts">
-        <div class="section-header">
-            <div>
-                <h2>Safety & Email Alerts</h2>
-                <p>Automated SMTP alert dispatcher & system notifications</p>
-            </div>
-            <span class="section-badge">SMTP ALERTS</span>
-        </div>
-
-        <div class="alerts-container">
-            <!-- SYSTEM STATUS BAR -->
-            <div class="alert-section">
+<!-- ================= MODAL: EMAIL ALERT SETTINGS ================= -->
+<div id="emailModal" class="modal-overlay hidden">
+    <div class="modal-card modal-medium">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-icon">✉️</span>
                 <div>
-                    <h3>System Status</h3>
-                    <p id="alertDescription">
-                        All connected backend sensor tables are receiving data normally.
-                    </p>
-                </div>
-                <div class="system-ok" id="systemOkBadge">
-                    ● All Systems Normal
+                    <h3>Real-Time SMTP Alert System</h3>
+                    <p>Automated threshold dispatching directly to classroom staff</p>
                 </div>
             </div>
+            <button id="btnCloseEmail" class="btn-close-modal">✕</button>
+        </div>
 
-            <!-- SMTP EMAIL ALERT CONFIGURATION -->
-            <div class="email-alert-card">
-                <div class="email-card-header">
-                    <div>
-                        <h3>✉️ Real-Time SMTP Email Alert System</h3>
-                        <p>Automatic threshold-based alerts dispatched to configured recipients when sensor values exceed safety limits</p>
-                    </div>
-                    <span class="smtp-status-tag" id="smtpStatusBadge">● Checking SMTP...</span>
+        <div class="modal-body email-modal-body">
+            <div class="email-status-banner">
+                <div>
+                    <span class="sub-label">CURRENT ALERT RECIPIENT</span>
+                    <strong id="currentRecipientDisplay">Loading recipient...</strong>
                 </div>
+                <span class="smtp-live-tag" id="smtpModalTag">Checking...</span>
+            </div>
 
-                <div class="email-test-controls">
-                    <div class="input-group">
-                        <input type="email" id="alertRecipientInput" placeholder="Override alert recipient email..." />
-                        <button id="btnUpdateRecipient" class="btn-primary-email">
-                            <span>📨 Update Recipient</span>
-                        </button>
-                    </div>
-                    <p class="email-hint" id="emailConfigFeedback">
-                        * Current recipient loaded from .env: <strong id="currentRecipientDisplay">--</strong>
-                    </p>
-                    <p class="email-hint">
-                        * Thresholds: CO₂ > 1200 ppm, Air Temp > 40°C, PM2.5 > 35 µg/m³, pH out of 6.0-9.0, Pi 4 Temp > 75°C, Washroom VOC > 150, eCO₂ > 1500 ppm.
-                    </p>
+            <div class="email-input-section">
+                <label for="alertRecipientInput">Override / Update Recipient Email:</label>
+                <div class="modal-input-group">
+                    <input type="email" id="alertRecipientInput" placeholder="Enter recipient email..." />
+                    <button id="btnUpdateRecipient" class="btn-primary-action">
+                        <span>Update Recipient</span>
+                    </button>
+                </div>
+                <p class="modal-hint" id="emailConfigFeedback">
+                    * Configured via backend <code>.env</code>. Alerts dispatch instantaneously upon threshold breach.
+                </p>
+            </div>
+
+            <div class="thresholds-summary-box">
+                <h4>⚠️ Active Safety Alert Thresholds:</h4>
+                <div class="thresholds-tag-grid">
+                    <span>Air Temp > 40°C</span>
+                    <span>CO₂ > 1200 ppm</span>
+                    <span>PM2.5 > 35 µg/m³</span>
+                    <span>pH &lt; 6.0 or &gt; 9.0</span>
+                    <span>Pi 4 Temp > 75°C</span>
+                    <span>Washroom VOC > 150 AQI</span>
+                    <span>Eq. CO₂ > 1500 ppm</span>
+                    <span>Washroom Smell > 7 Index</span>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</div>
 
-    <!-- ================= FOOTER ================= -->
-    <footer>
-        <span>SchoolEnv Monitoring System</span>
-        <span>ESP32 (Air, Water, Washroom) & Raspberry Pi 4 • Live Backend Link</span>
-    </footer>
+<!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+<div id="toastContainer" class="toast-container"></div>
 
-</main>
-
-<!-- Dynamic Student Health Impact Tooltip -->
+<!-- ================= FLOATING STUDENT HEALTH TOOLTIP ================= -->
 <div id="healthImpactTooltip" class="health-impact-tooltip hidden">
     <div class="tooltip-header">
         <span class="tooltip-icon" id="tooltipIcon">🫁</span>
