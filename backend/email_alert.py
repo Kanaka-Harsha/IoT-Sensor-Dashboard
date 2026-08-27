@@ -282,13 +282,40 @@ def check_sensor_thresholds(sensor_category, data):
             )
 
     elif sensor_category == "pi4":
-        pi_temp = data.get("temperature_c") if data.get("temperature_c") is not None else data.get("temperature")
-        if pi_temp is not None and float(pi_temp) > 75.0:
-            check_and_trigger_alert(
-                "pi4_temp_high",
-                "Raspberry Pi 4 Telemetry Node Temp",
-                round(float(pi_temp), 1),
-                "°C",
-                "< 60°C",
-                "Hardware thermal overload risks monitoring node crash, stopping environmental safety monitoring for the classroom."
-            )
+        pi_temp = data.get("temp")
+        if pi_temp is None:
+            pi_temp = data.get("temperature_c")
+        if pi_temp is None:
+            pi_temp = data.get("temperature")
+
+        if pi_temp is not None:
+            try:
+                if float(pi_temp) > 75.0:
+                    check_and_trigger_alert(
+                        "pi4_temp_high",
+                        "Raspberry Pi 4 Telemetry Node Temp",
+                        round(float(pi_temp), 1),
+                        "°C",
+                        "< 60°C",
+                        "Hardware thermal overload risks monitoring node crash, stopping environmental safety monitoring for the classroom."
+                    )
+            except (ValueError, TypeError):
+                pass
+
+        gas_res = data.get("gas_resistance")
+        if gas_res is None:
+            gas_res = data.get("gas")
+        if gas_res is not None:
+            try:
+                gas_val = float(gas_res)
+                if gas_val < 10000:
+                    check_and_trigger_alert(
+                        "pi4_gas_low",
+                        "Pi 4 BME Gas Resistance (VOC Air)",
+                        round(gas_val),
+                        "Ohms",
+                        "> 50,000 Ohms",
+                        "Low gas resistance indicates high concentration of airborne volatile organic compounds or chemical fumes in the classroom."
+                    )
+            except (ValueError, TypeError):
+                pass

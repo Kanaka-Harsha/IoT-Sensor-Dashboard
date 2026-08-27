@@ -168,39 +168,53 @@ def receive_pi4_temperature_data():
     if data is None:
         return jsonify({"status": "error", "message": "Invalid JSON payload"}), 400
 
-    # Extract temperature value with fallbacks for key names
-    temp_c = data.get("temperature_c")
+    # Extract Pi 4 sensor values with fallbacks for JSON keys: temp, humidity, pressure, gas_resistance
+    temp_c = data.get("temp")
+    if temp_c is None:
+        temp_c = data.get("temperature_c")
     if temp_c is None:
         temp_c = data.get("temperature")
-    if temp_c is None:
-        temp_c = data.get("temp")
 
-    if temp_c is None:
-        return jsonify({"status": "error", "message": "Missing 'temperature' field in JSON payload"}), 400
+    humidity = data.get("humidity")
+    if humidity is None:
+        humidity = data.get("humidity_pct")
+
+    pressure = data.get("pressure")
+    if pressure is None:
+        pressure = data.get("pressure_hpa")
+
+    gas_res = data.get("gas_resistance")
+    if gas_res is None:
+        gas_res = data.get("gas")
+    if gas_res is None:
+        gas_res = data.get("gas_resistance_ohm")
 
     sender_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     user_agent = request.headers.get('User-Agent', 'Unknown')
 
     print("\n========================================")
-    print("      PI 4 TEMP DATA RECEIVED")
+    print("      PI 4 SENSOR DATA RECEIVED")
     print("========================================")
     print("Time              :", datetime.now())
     print("Sender IP         :", sender_ip)
     print("User-Agent        :", user_agent)
-    print("Temperature       :", temp_c, "°C")
+    print("Temperature       :", temp_c if temp_c is not None else "N/A", "°C")
+    print("Humidity          :", humidity if humidity is not None else "N/A")
+    print("Pressure          :", pressure if pressure is not None else "N/A")
+    print("Gas Resistance    :", gas_res if gas_res is not None else "N/A")
     print("========================================")
 
     raw_insert_sql = """
         INSERT INTO pi4_temperature (
-            temperature_c
-        ) VALUES (%s)
+            temperature_c, humidity, pressure, gas_resistance
+        ) VALUES (%s, %s, %s, %s)
         RETURNING id, timestamp;
     """
 
     try:
         inserted = execute_query(
             raw_insert_sql,
-            (temp_c,),
+            (temp_c, str(humidity) if humidity is not None else None, str(pressure) if pressure is not None else None, str(gas_res) if gas_res is not None else None),
             fetchone=True,
             commit=True
         )
@@ -213,12 +227,12 @@ def receive_pi4_temperature_data():
 
         return jsonify({
             "status": "success",
-            "message": "Pi 4 temperature data received and saved successfully",
+            "message": "Pi 4 sensor data received and saved successfully",
             "inserted_id": inserted["id"],
             "timestamp": inserted["timestamp"].isoformat() if isinstance(inserted["timestamp"], datetime) else str(inserted["timestamp"])
         }), 200
     except Exception as e:
-        logger.error(f"Failed to insert Pi 4 temperature data: {e}")
+        logger.error(f"Failed to insert Pi 4 sensor data: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
 
 
@@ -276,12 +290,12 @@ def get_air_quality_data():
 
 @app.route("/api/pi4/temperature", methods=["GET"])
 def get_pi4_temperature_data():
-    """Returns recent Raspberry Pi 4 temperature records for dashboard visualization."""
+    """Returns recent Raspberry Pi 4 sensor records for dashboard visualization."""
     limit = request.args.get("limit", default=50, type=int)
     offset = request.args.get("offset", default=0, type=int)
 
     raw_select_sql = """
-        SELECT id, timestamp, temperature_c
+        SELECT id, timestamp, temperature_c, humidity, pressure, gas_resistance
         FROM pi4_temperature
         ORDER BY timestamp DESC
         LIMIT %s OFFSET %s;

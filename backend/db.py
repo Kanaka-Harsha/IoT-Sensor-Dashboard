@@ -83,7 +83,10 @@ def init_db():
     CREATE TABLE IF NOT EXISTS pi4_temperature (
         id SERIAL PRIMARY KEY,
         timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        temperature_c REAL
+        temperature_c REAL,
+        humidity VARCHAR(50),
+        pressure VARCHAR(50),
+        gas_resistance VARCHAR(50)
     );
     """
 
@@ -93,8 +96,11 @@ def init_db():
             cur.execute(create_water_quality_table)
             cur.execute(create_air_quality_table)
             cur.execute(create_pi4_temperature_table)
-            # Migration check: ensure 'turbidity' column exists if table was previously created
+            # Migration checks: ensure columns exist if table was previously created
             cur.execute("ALTER TABLE water_quality ADD COLUMN IF NOT EXISTS turbidity REAL;")
+            cur.execute("ALTER TABLE pi4_temperature ADD COLUMN IF NOT EXISTS humidity VARCHAR(50);")
+            cur.execute("ALTER TABLE pi4_temperature ADD COLUMN IF NOT EXISTS pressure VARCHAR(50);")
+            cur.execute("ALTER TABLE pi4_temperature ADD COLUMN IF NOT EXISTS gas_resistance VARCHAR(50);")
         conn.commit()
         logger.info("Database tables 'water_quality', 'air_quality', and 'pi4_temperature' verified/created successfully.")
     except Exception as e:
