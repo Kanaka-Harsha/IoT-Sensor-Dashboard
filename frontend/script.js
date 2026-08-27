@@ -363,7 +363,7 @@ function updateValues() {
 
 
 // ==========================================
-// CHART CONFIGURATION (Chart.js Inside Modal)
+// CHART CONFIGURATION (Chart.js Inside Modal - Light Theme)
 // ==========================================
 const chartOptions = {
     responsive: true,
@@ -372,12 +372,12 @@ const chartOptions = {
     plugins: {
         legend: {
             position: "bottom",
-            labels: { boxWidth: 10, font: { size: 10 }, color: "#94a3b8" }
+            labels: { boxWidth: 10, font: { size: 10 }, color: "#475569" }
         }
     },
     scales: {
         x: { ticks: { font: { size: 9 }, color: "#64748b" }, grid: { display: false } },
-        y: { ticks: { font: { size: 9 }, color: "#64748b" }, grid: { color: "rgba(255, 255, 255, 0.05)" } }
+        y: { ticks: { font: { size: 9 }, color: "#64748b" }, grid: { color: "#f1f5f9" } }
     }
 };
 
