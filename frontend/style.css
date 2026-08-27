@@ -316,7 +316,7 @@ nav {
 .overview {
     display: grid;
 
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
 
     gap: 15px;
 
@@ -434,6 +434,36 @@ nav {
     background: #ecfeff;
 
     color: #0891b2;
+}
+
+
+.section-badge.washroom {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+
+.section-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.node-timestamp {
+    font-size: 9px;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+.sensor-icon.washroom-icon {
+    background: #fef3c7;
+    color: #b45309;
 }
 
 
@@ -889,7 +919,7 @@ footer {
 
 
     .overview {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
 

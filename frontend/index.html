@@ -34,8 +34,12 @@
             Water Quality
         </a>
         <a href="#pi4" class="nav-link">
-            <span>🥧</span>
+            <span>🪧</span>
             Pi 4 Temp
+        </a>
+        <a href="#washroom" class="nav-link">
+            <span>🚿</span>
+            Washroom
         </a>
         <a href="#analytics" class="nav-link">
             <span>▥</span>
@@ -66,7 +70,7 @@
     <header class="header">
         <div>
             <h1>School Environment Monitoring</h1>
-            <p>Real-time air, water, and Pi 4 sensor metrics</p>
+            <p>Real-time air, water, Pi 4 & washroom hygiene sensor metrics</p>
         </div>
 
         <div class="header-info">
@@ -85,7 +89,7 @@
     <section class="system-status">
         <div class="status-item">
             <span class="status-label">NODES</span>
-            <strong>ESP32 Air & Water + Pi 4</strong>
+            <strong>ESP32 Air, Water & Washroom + Pi 4</strong>
         </div>
 
         <div class="status-item">
@@ -95,7 +99,7 @@
 
         <div class="status-item">
             <span class="status-label">ACTIVE DB TABLES</span>
-            <strong id="activeTablesCount">3 / 3 Active</strong>
+            <strong id="activeTablesCount">4 / 4 Active</strong>
         </div>
 
         <div class="status-item">
@@ -142,6 +146,18 @@
             </div>
             <div class="overview-status" id="pi4OverviewStatus">Active</div>
         </div>
+
+        <div class="overview-card" data-sensor-type="washroomVoc">
+            <div class="card-top-row">
+                <div class="overview-title">Washroom Hygiene</div>
+                <span class="health-info-badge">ⓘ Impact</span>
+            </div>
+            <div class="overview-score">
+                <span id="washroomScore">--</span>
+                <small>AQI</small>
+            </div>
+            <div class="overview-status" id="washroomOverviewStatus">● Monitoring</div>
+        </div>
     </section>
 
 
@@ -152,7 +168,10 @@
                 <h2>Air Quality</h2>
                 <p>Real-time environmental air parameters from backend</p>
             </div>
-            <span class="section-badge">AIR</span>
+            <div class="section-header-right">
+                <span class="node-timestamp" id="airTimestamp">Last reading: --</span>
+                <span class="section-badge">AIR • ESP Node 1</span>
+            </div>
         </div>
 
         <div class="sensor-grid">
@@ -300,7 +319,10 @@
                 <h2>Water Quality</h2>
                 <p>Real-time water quality metrics from backend</p>
             </div>
-            <span class="section-badge water">WATER</span>
+            <div class="section-header-right">
+                <span class="node-timestamp" id="waterTimestamp">Last reading: --</span>
+                <span class="section-badge water">WATER • ESP Node 2</span>
+            </div>
         </div>
 
         <div class="sensor-grid">
@@ -382,7 +404,10 @@
                 <h2>Raspberry Pi 4 Node</h2>
                 <p>Real-time Pi 4 environmental telemetry (BME680 suite)</p>
             </div>
-            <span class="section-badge">PI 4 SENSORS</span>
+            <div class="section-header-right">
+                <span class="node-timestamp" id="pi4Timestamp">Last reading: --</span>
+                <span class="section-badge">PI 4 SENSORS</span>
+            </div>
         </div>
 
         <div class="sensor-grid">
@@ -477,6 +502,113 @@
     </section>
 
 
+    <!-- ================= WASHROOM HYGIENE ================= -->
+    <section class="section" id="washroom">
+        <div class="section-header">
+            <div>
+                <h2>Washroom Hygiene</h2>
+                <p>Real-time washroom air quality & odor monitoring (ESP Node 3)</p>
+            </div>
+            <div class="section-header-right">
+                <span class="node-timestamp" id="washroomTimestamp">Last reading: --</span>
+                <span class="section-badge washroom">WASHROOM • ESP Node 3</span>
+            </div>
+        </div>
+
+        <div class="sensor-grid">
+
+            <!-- GAS SENSOR -->
+            <div class="sensor-card" data-sensor-type="washroomGas">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Gas Sensor <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>Airborne Contaminant Detector</span>
+                    </div>
+                    <div class="sensor-icon washroom-icon">GAS</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="washroomGas">--</strong>
+                    <span>raw</span>
+                </div>
+                <div class="progress">
+                    <div id="washroomGasBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Gas contamination level</span>
+                    <strong id="washroomGasStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- SMELL INDEX -->
+            <div class="sensor-card" data-sensor-type="washroomSmell">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Smell Index <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>Odor Intensity Level</span>
+                    </div>
+                    <div class="sensor-icon washroom-icon">👃</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="washroomSmell">--</strong>
+                    <span>index</span>
+                </div>
+                <div class="progress">
+                    <div id="washroomSmellBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Odor intensity</span>
+                    <strong id="washroomSmellStatus" class="status-good">● Clean</strong>
+                </div>
+            </div>
+
+            <!-- VOC AQI -->
+            <div class="sensor-card" data-sensor-type="washroomVoc">
+                <div class="sensor-header">
+                    <div>
+                        <h3>VOC AQI <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>Volatile Organic Air Quality</span>
+                    </div>
+                    <div class="sensor-icon washroom-icon">AQI</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="washroomVoc">--</strong>
+                    <span>AQI</span>
+                </div>
+                <div class="progress">
+                    <div id="washroomVocBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Air quality index</span>
+                    <strong id="washroomVocStatus" class="status-good">● Good</strong>
+                </div>
+            </div>
+
+            <!-- EQUIVALENT CO2 -->
+            <div class="sensor-card" data-sensor-type="washroomEco2">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Eq. CO₂ <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>Equivalent Carbon Dioxide</span>
+                    </div>
+                    <div class="sensor-icon washroom-icon">eCO₂</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="washroomEco2">--</strong>
+                    <span>ppm</span>
+                </div>
+                <div class="progress">
+                    <div id="washroomEco2Bar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Equivalent CO₂ level</span>
+                    <strong id="washroomEco2Status" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
     <!-- ================= ANALYTICS ================= -->
     <section class="section" id="analytics">
         <div class="section-header">
@@ -554,25 +686,28 @@
                 </div>
             </div>
 
-            <!-- SMTP EMAIL TEST CARD -->
+            <!-- SMTP EMAIL ALERT CONFIGURATION -->
             <div class="email-alert-card">
                 <div class="email-card-header">
                     <div>
-                        <h3>✉️ SMTP Email Alert System</h3>
-                        <p>Triggers instant email alerts when classroom health thresholds are breached</p>
+                        <h3>✉️ Real-Time SMTP Email Alert System</h3>
+                        <p>Automatic threshold-based alerts dispatched to configured recipients when sensor values exceed safety limits</p>
                     </div>
                     <span class="smtp-status-tag" id="smtpStatusBadge">● Checking SMTP...</span>
                 </div>
 
                 <div class="email-test-controls">
                     <div class="input-group">
-                        <input type="email" id="testEmailInput" placeholder="Enter recipient email address..." />
-                        <button id="btnSendTestEmail" class="btn-primary-email">
-                            <span>📧 Send Test Alert</span>
+                        <input type="email" id="alertRecipientInput" placeholder="Override alert recipient email..." />
+                        <button id="btnUpdateRecipient" class="btn-primary-email">
+                            <span>📨 Update Recipient</span>
                         </button>
                     </div>
-                    <p class="email-hint" id="emailTestFeedback">
-                        * Thresholds: CO₂ > 1200 ppm, Air Temp > 40°C, PM2.5 > 35 µg/m³, pH out of 6.0-9.0, Pi 4 Temp > 75°C.
+                    <p class="email-hint" id="emailConfigFeedback">
+                        * Current recipient loaded from .env: <strong id="currentRecipientDisplay">--</strong>
+                    </p>
+                    <p class="email-hint">
+                        * Thresholds: CO₂ > 1200 ppm, Air Temp > 40°C, PM2.5 > 35 µg/m³, pH out of 6.0-9.0, Pi 4 Temp > 75°C, Washroom VOC > 150, eCO₂ > 1500 ppm.
                     </p>
                 </div>
             </div>
@@ -581,8 +716,8 @@
 
     <!-- ================= FOOTER ================= -->
     <footer>
-        <span>EnviroSense Monitoring System</span>
-        <span>ESP32 & Raspberry Pi 4 • Live Backend Link</span>
+        <span>SchoolEnv Monitoring System</span>
+        <span>ESP32 (Air, Water, Washroom) & Raspberry Pi 4 • Live Backend Link</span>
     </footer>
 
 </main>

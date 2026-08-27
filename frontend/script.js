@@ -1,9 +1,13 @@
 // ==========================================
-// ENVIROSENSE MONITORING DASHBOARD (REAL BACKEND)
+// SCHOOLENV MONITORING DASHBOARD (REAL BACKEND)
 // ==========================================
 
-// Configurable API Base URL (Supports Vercel & Local ngrok)
-const API_BASE_URL = window.API_BASE_URL || "https://casually-override-childlike.ngrok-free.dev";
+// Configurable API Base URL (Auto-detects localhost vs ngrok)
+const API_BASE_URL = window.API_BASE_URL || (
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "http://localhost:5000"
+        : "https://casually-override-childlike.ngrok-free.dev"
+);
 
 // Default fetch headers (Bypasses ngrok free tier browser warning)
 const FETCH_HEADERS = {
@@ -26,7 +30,19 @@ let sensorData = {
     pi4Temp: null,
     pi4Humidity: null,
     pi4Pressure: null,
-    pi4Gas: null
+    pi4Gas: null,
+    washroomGas: null,
+    washroomSmell: null,
+    washroomVoc: null,
+    washroomEco2: null
+};
+
+// Per-node latest timestamps
+let nodeTimestamps = {
+    air: null,
+    water: null,
+    pi4: null,
+    washroom: null
 };
 
 // ==========================================
@@ -57,6 +73,33 @@ function setStatus(elementId, text, type) {
                 ? "status-warning"
                 : "status-danger"
     );
+}
+
+// ==========================================
+// TIMESTAMP DISPLAY HELPERS
+// ==========================================
+function formatNodeTimestamp(isoStr) {
+    if (!isoStr) return "No data yet";
+    try {
+        const d = new Date(isoStr);
+        return d.toLocaleString();
+    } catch {
+        return isoStr;
+    }
+}
+
+function updateNodeTimestamps() {
+    const airTs = document.getElementById("airTimestamp");
+    if (airTs) airTs.textContent = "Last reading: " + formatNodeTimestamp(nodeTimestamps.air);
+
+    const waterTs = document.getElementById("waterTimestamp");
+    if (waterTs) waterTs.textContent = "Last reading: " + formatNodeTimestamp(nodeTimestamps.water);
+
+    const pi4Ts = document.getElementById("pi4Timestamp");
+    if (pi4Ts) pi4Ts.textContent = "Last reading: " + formatNodeTimestamp(nodeTimestamps.pi4);
+
+    const washroomTs = document.getElementById("washroomTimestamp");
+    if (washroomTs) washroomTs.textContent = "Last reading: " + formatNodeTimestamp(nodeTimestamps.washroom);
 }
 
 // ==========================================
@@ -117,6 +160,20 @@ function updateValues() {
         }
     }
 
+    // Washroom Hygiene
+    if (document.getElementById("washroomGas")) {
+        document.getElementById("washroomGas").textContent = sensorData.washroomGas !== null ? Number(sensorData.washroomGas).toFixed(0) : "--";
+    }
+    if (document.getElementById("washroomSmell")) {
+        document.getElementById("washroomSmell").textContent = sensorData.washroomSmell !== null ? Number(sensorData.washroomSmell).toFixed(1) : "--";
+    }
+    if (document.getElementById("washroomVoc")) {
+        document.getElementById("washroomVoc").textContent = sensorData.washroomVoc !== null ? Math.round(Number(sensorData.washroomVoc)) : "--";
+    }
+    if (document.getElementById("washroomEco2")) {
+        document.getElementById("washroomEco2").textContent = sensorData.washroomEco2 !== null ? Math.round(Number(sensorData.washroomEco2)) : "--";
+    }
+
     // Scores Overview
     if (document.getElementById("airScore")) {
         document.getElementById("airScore").textContent = sensorData.voc !== null ? Math.round(sensorData.voc) : (sensorData.co2 !== null ? Math.round(sensorData.co2) : "--");
@@ -127,8 +184,11 @@ function updateValues() {
     if (document.getElementById("pi4Score")) {
         document.getElementById("pi4Score").textContent = sensorData.pi4Temp !== null ? Number(sensorData.pi4Temp).toFixed(1) : "--";
     }
+    if (document.getElementById("washroomScore")) {
+        document.getElementById("washroomScore").textContent = sensorData.washroomVoc !== null ? Math.round(Number(sensorData.washroomVoc)) : "--";
+    }
 
-    // Progress Bars
+    // Progress Bars — Air
     if (sensorData.co2 !== null && document.getElementById("co2Bar")) {
         document.getElementById("co2Bar").style.width = Math.min(sensorData.co2 / 2000 * 100, 100) + "%";
     }
@@ -148,6 +208,7 @@ function updateValues() {
         document.getElementById("humidityBar").style.width = Math.min(sensorData.humidity, 100) + "%";
     }
 
+    // Progress Bars — Water
     if (sensorData.tds !== null && document.getElementById("tdsBar")) {
         document.getElementById("tdsBar").style.width = Math.min(sensorData.tds / 1000 * 100, 100) + "%";
     }
@@ -179,7 +240,25 @@ function updateValues() {
         if (!isNaN(g)) document.getElementById("pi4GasBar").style.width = Math.min(g / 100000 * 100, 100) + "%";
     }
 
-    // Update Status Labels
+    // Washroom Bars
+    if (sensorData.washroomGas !== null && document.getElementById("washroomGasBar")) {
+        const g = Number(sensorData.washroomGas);
+        if (!isNaN(g)) document.getElementById("washroomGasBar").style.width = Math.min(g / 500 * 100, 100) + "%";
+    }
+    if (sensorData.washroomSmell !== null && document.getElementById("washroomSmellBar")) {
+        const s = Number(sensorData.washroomSmell);
+        if (!isNaN(s)) document.getElementById("washroomSmellBar").style.width = Math.min(s / 10 * 100, 100) + "%";
+    }
+    if (sensorData.washroomVoc !== null && document.getElementById("washroomVocBar")) {
+        const v = Number(sensorData.washroomVoc);
+        if (!isNaN(v)) document.getElementById("washroomVocBar").style.width = Math.min(v / 500 * 100, 100) + "%";
+    }
+    if (sensorData.washroomEco2 !== null && document.getElementById("washroomEco2Bar")) {
+        const e = Number(sensorData.washroomEco2);
+        if (!isNaN(e)) document.getElementById("washroomEco2Bar").style.width = Math.min(e / 3000 * 100, 100) + "%";
+    }
+
+    // Update Status Labels — Air
     if (sensorData.co2 !== null) {
         if (sensorData.co2 < 1000) setStatus("co2Status", "Normal", "good");
         else if (sensorData.co2 < 1500) setStatus("co2Status", "Elevated", "warning");
@@ -206,6 +285,7 @@ function updateValues() {
         else setStatus("phStatus", "Check", "warning");
     }
 
+    // Status Labels — Pi 4
     if (sensorData.pi4Temp !== null) {
         const t = Number(sensorData.pi4Temp);
         if (!isNaN(t)) {
@@ -236,6 +316,51 @@ function updateValues() {
             else setStatus("pi4GasStatus", "Warning", "danger");
         }
     }
+
+    // Status Labels — Washroom
+    if (sensorData.washroomGas !== null) {
+        const g = Number(sensorData.washroomGas);
+        if (!isNaN(g)) {
+            if (g < 100) setStatus("washroomGasStatus", "Normal", "good");
+            else if (g < 300) setStatus("washroomGasStatus", "Elevated", "warning");
+            else setStatus("washroomGasStatus", "High", "danger");
+        }
+    }
+    if (sensorData.washroomSmell !== null) {
+        const s = Number(sensorData.washroomSmell);
+        if (!isNaN(s)) {
+            if (s < 3) setStatus("washroomSmellStatus", "Clean", "good");
+            else if (s < 7) setStatus("washroomSmellStatus", "Noticeable", "warning");
+            else setStatus("washroomSmellStatus", "Strong Odor", "danger");
+        }
+    }
+    if (sensorData.washroomVoc !== null) {
+        const v = Number(sensorData.washroomVoc);
+        if (!isNaN(v)) {
+            if (v < 50) setStatus("washroomVocStatus", "Good", "good");
+            else if (v < 150) setStatus("washroomVocStatus", "Moderate", "warning");
+            else setStatus("washroomVocStatus", "Unhealthy", "danger");
+
+            // Overview status
+            const ovStatus = document.getElementById("washroomOverviewStatus");
+            if (ovStatus) {
+                if (v < 50) { ovStatus.textContent = "● Good"; ovStatus.className = "overview-status good"; }
+                else if (v < 150) { ovStatus.textContent = "● Moderate"; ovStatus.className = "overview-status"; }
+                else { ovStatus.textContent = "● Unhealthy"; ovStatus.className = "overview-status"; ovStatus.style.color = "#dc2626"; }
+            }
+        }
+    }
+    if (sensorData.washroomEco2 !== null) {
+        const e = Number(sensorData.washroomEco2);
+        if (!isNaN(e)) {
+            if (e < 1000) setStatus("washroomEco2Status", "Normal", "good");
+            else if (e < 1500) setStatus("washroomEco2Status", "Elevated", "warning");
+            else setStatus("washroomEco2Status", "High", "danger");
+        }
+    }
+
+    // Update node timestamps
+    updateNodeTimestamps();
 }
 
 // ==========================================
@@ -306,6 +431,7 @@ async function fetchLatestReadings() {
             const air = resData.air_quality || {};
             const water = resData.water_quality || {};
             const pi4 = resData.pi4_temperature || {};
+            const washroom = resData.washroom_hygiene || {};
 
             // Update Air Sensor State
             if (air.co2 !== undefined) sensorData.co2 = air.co2;
@@ -327,6 +453,18 @@ async function fetchLatestReadings() {
             if (pi4.humidity !== undefined) sensorData.pi4Humidity = pi4.humidity;
             if (pi4.pressure !== undefined) sensorData.pi4Pressure = pi4.pressure;
             if (pi4.gas_resistance !== undefined) sensorData.pi4Gas = pi4.gas_resistance;
+
+            // Update Washroom Hygiene State
+            if (washroom.gas !== undefined) sensorData.washroomGas = washroom.gas;
+            if (washroom.smell !== undefined) sensorData.washroomSmell = washroom.smell;
+            if (washroom.voc_aqi !== undefined) sensorData.washroomVoc = washroom.voc_aqi;
+            if (washroom.eq_co2 !== undefined) sensorData.washroomEco2 = washroom.eq_co2;
+
+            // Update per-node timestamps
+            if (air.timestamp) nodeTimestamps.air = air.timestamp;
+            if (water.timestamp) nodeTimestamps.water = water.timestamp;
+            if (pi4.timestamp) nodeTimestamps.pi4 = pi4.timestamp;
+            if (washroom.timestamp) nodeTimestamps.washroom = washroom.timestamp;
 
             updateValues();
             updateConnectionStatus(true);
@@ -388,9 +526,9 @@ async function fetchHealth() {
             const data = await res.json();
             if (data.status === "healthy" && data.table_counts) {
                 const counts = data.table_counts;
-                const activeCount = (counts.water_quality > 0 ? 1 : 0) + (counts.air_quality > 0 ? 1 : 0) + (counts.pi4_temperature > 0 ? 1 : 0);
+                const activeCount = (counts.water_quality > 0 ? 1 : 0) + (counts.air_quality > 0 ? 1 : 0) + (counts.pi4_temperature > 0 ? 1 : 0) + (counts.washroom_hygiene > 0 ? 1 : 0);
                 const activeElem = document.getElementById("activeTablesCount");
-                if (activeElem) activeElem.textContent = `${activeCount} / 3 Active`;
+                if (activeElem) activeElem.textContent = `${activeCount} / 4 Active`;
             }
         }
     } catch (err) {
@@ -514,6 +652,34 @@ const HEALTH_IMPACT_DATA = {
         icon: "🧪",
         ideal: "> 50 kΩ (High Resistance = Clean Air)",
         harm: "Low gas resistance (<10 kΩ) indicates airborne volatile chemicals, solvent vapors, or poor classroom ventilation causing dizziness and headaches."
+    },
+    washroomGas: {
+        name: "Washroom Gas Sensor",
+        subtitle: "Airborne Contaminant Detector",
+        icon: "🚽",
+        ideal: "< 100 raw (Clean Washroom Air)",
+        harm: "High gas readings indicate sewer gas leaks, chemical fumes, or biological contaminants posing respiratory hazards and infection risk to students."
+    },
+    washroomSmell: {
+        name: "Washroom Smell / Odor Index",
+        subtitle: "Hygiene Odor Intensity",
+        icon: "👃",
+        ideal: "< 3 index (Neutral / No Odor)",
+        harm: "Strong odor (>7) signals washroom hygiene failure — blocked drains, stagnant water, or bacterial growth causing nausea and gag reflex in students."
+    },
+    washroomVoc: {
+        name: "Washroom VOC Air Quality",
+        subtitle: "Volatile Organic Compound AQI",
+        icon: "🍃",
+        ideal: "< 50 AQI (Good Air Quality)",
+        harm: "Elevated VOCs from cleaning chemicals, disinfectants, or mold release cause headaches, dizziness, and mucous membrane irritation."
+    },
+    washroomEco2: {
+        name: "Washroom Equivalent CO₂",
+        subtitle: "Ventilation Quality Indicator",
+        icon: "🫁",
+        ideal: "< 1000 ppm (Well-Ventilated)",
+        harm: "High eCO₂ (>1500 ppm) indicates critically poor ventilation — causes drowsiness, nausea, and headaches. Prolonged exposure affects cognitive function."
     }
 };
 
@@ -585,10 +751,11 @@ function initHealthImpactTooltips() {
 
 
 // ==========================================
-// SMTP EMAIL ALERT STATUS & TEST TRIGGER
+// SMTP EMAIL ALERT STATUS & RECIPIENT UPDATE
 // ==========================================
 async function fetchSmtpStatus() {
     const badge = document.getElementById("smtpStatusBadge");
+    const recipientDisplay = document.getElementById("currentRecipientDisplay");
     if (!badge) return;
 
     try {
@@ -602,6 +769,13 @@ async function fetchSmtpStatus() {
                 badge.textContent = "● SMTP Unconfigured (.env)";
                 badge.className = "smtp-status-tag inactive";
             }
+
+            // Show configured recipient
+            if (recipientDisplay) {
+                recipientDisplay.textContent = data.recipient_emails && data.recipient_emails.length > 0
+                    ? data.recipient_emails.join(", ")
+                    : "--";
+            }
         }
     } catch (err) {
         badge.textContent = "● Backend Link Standby";
@@ -610,55 +784,54 @@ async function fetchSmtpStatus() {
 }
 
 function initEmailAlertSystem() {
-    const btnTest = document.getElementById("btnSendTestEmail");
-    const inputEmail = document.getElementById("testEmailInput");
-    const feedbackElem = document.getElementById("emailTestFeedback");
+    const btnUpdate = document.getElementById("btnUpdateRecipient");
+    const inputEmail = document.getElementById("alertRecipientInput");
+    const feedbackElem = document.getElementById("emailConfigFeedback");
 
-    if (!btnTest) return;
+    if (!btnUpdate) return;
 
-    btnTest.addEventListener("click", async () => {
+    btnUpdate.addEventListener("click", async () => {
         const targetEmail = inputEmail ? inputEmail.value.trim() : "";
-        btnTest.disabled = true;
-        btnTest.innerHTML = "<span>⌛ Sending Alert...</span>";
 
-        if (feedbackElem) {
-            feedbackElem.textContent = "Connecting to backend SMTP dispatcher...";
-            feedbackElem.className = "email-hint";
+        if (!targetEmail || !targetEmail.includes("@")) {
+            if (feedbackElem) {
+                feedbackElem.innerHTML = "❌ Please enter a valid email address.";
+                feedbackElem.className = "email-hint error";
+            }
+            return;
         }
 
+        btnUpdate.disabled = true;
+        btnUpdate.innerHTML = "<span>⌛ Updating...</span>";
+
         try {
-            const res = await fetch(`${API_BASE_URL}/api/alerts/test-email`, {
+            const res = await fetch(`${API_BASE_URL}/api/alerts/update-recipient`, {
                 method: "POST",
                 headers: FETCH_HEADERS,
-                body: JSON.stringify({ to_email: targetEmail })
+                body: JSON.stringify({ email: targetEmail })
             });
 
             const data = await res.json();
 
             if (res.ok && data.status === "success") {
                 if (feedbackElem) {
-                    feedbackElem.textContent = `✓ ${data.message}`;
+                    feedbackElem.innerHTML = `✓ ${data.message}`;
                     feedbackElem.className = "email-hint success";
-                }
-            } else if (data.status === "warning") {
-                if (feedbackElem) {
-                    feedbackElem.textContent = `⚠️ ${data.message}`;
-                    feedbackElem.className = "email-hint warning";
                 }
             } else {
                 if (feedbackElem) {
-                    feedbackElem.textContent = `❌ ${data.message || "Failed to send test email alert."}`;
+                    feedbackElem.innerHTML = `❌ ${data.message || "Failed to update recipient."}`;
                     feedbackElem.className = "email-hint error";
                 }
             }
         } catch (err) {
             if (feedbackElem) {
-                feedbackElem.textContent = `❌ Error: Could not reach backend server at ${API_BASE_URL}. Ensure Flask app is running.`;
+                feedbackElem.innerHTML = `❌ Error: Could not reach backend server at ${API_BASE_URL}.`;
                 feedbackElem.className = "email-hint error";
             }
         } finally {
-            btnTest.disabled = false;
-            btnTest.innerHTML = "<span>📧 Send Test Alert</span>";
+            btnUpdate.disabled = false;
+            btnUpdate.innerHTML = "<span>📨 Update Recipient</span>";
             fetchSmtpStatus();
         }
     });
