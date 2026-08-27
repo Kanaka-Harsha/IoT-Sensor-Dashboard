@@ -107,8 +107,11 @@
 
     <!-- ================= OVERVIEW ================= -->
     <section class="overview">
-        <div class="overview-card">
-            <div class="overview-title">Air Quality Index</div>
+        <div class="overview-card" data-sensor-type="voc">
+            <div class="card-top-row">
+                <div class="overview-title">Air Quality Index</div>
+                <span class="health-info-badge">ⓘ Impact</span>
+            </div>
             <div class="overview-score">
                 <span id="airScore">--</span>
                 <small>AQI</small>
@@ -116,8 +119,11 @@
             <div class="overview-status good" id="airOverviewStatus">● Monitoring</div>
         </div>
 
-        <div class="overview-card">
-            <div class="overview-title">Water pH Balance</div>
+        <div class="overview-card" data-sensor-type="ph">
+            <div class="card-top-row">
+                <div class="overview-title">Water pH Balance</div>
+                <span class="health-info-badge">ⓘ Impact</span>
+            </div>
             <div class="overview-score">
                 <span id="waterScore">--</span>
                 <small>pH</small>
@@ -125,8 +131,11 @@
             <div class="overview-status good" id="waterOverviewStatus">● Optimal</div>
         </div>
 
-        <div class="overview-card">
-            <div class="overview-title">Pi 4 Node Temp</div>
+        <div class="overview-card" data-sensor-type="pi4Temp">
+            <div class="card-top-row">
+                <div class="overview-title">Pi 4 Node Temp</div>
+                <span class="health-info-badge">ⓘ Impact</span>
+            </div>
             <div class="overview-score">
                 <span id="pi4Score">--</span>
                 <small>°C</small>
@@ -149,10 +158,10 @@
         <div class="sensor-grid">
 
             <!-- CO2 -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="co2">
                 <div class="sensor-header">
                     <div>
-                        <h3>CO₂</h3>
+                        <h3>CO₂ <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Carbon Dioxide</span>
                     </div>
                     <div class="sensor-icon">CO₂</div>
@@ -171,10 +180,10 @@
             </div>
 
             <!-- PM2.5 -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="pm25">
                 <div class="sensor-header">
                     <div>
-                        <h3>PM2.5</h3>
+                        <h3>PM2.5 <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Particulate Matter</span>
                     </div>
                     <div class="sensor-icon">PM</div>
@@ -193,10 +202,10 @@
             </div>
 
             <!-- PM10 -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="pm10">
                 <div class="sensor-header">
                     <div>
-                        <h3>PM10</h3>
+                        <h3>PM10 <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Coarse Particles</span>
                     </div>
                     <div class="sensor-icon">PM</div>
@@ -215,10 +224,10 @@
             </div>
 
             <!-- AQI -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="voc">
                 <div class="sensor-header">
                     <div>
-                        <h3>AQI / VOC</h3>
+                        <h3>AQI / VOC <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Air Quality Index</span>
                     </div>
                     <div class="sensor-icon">AQI</div>
@@ -237,10 +246,10 @@
             </div>
 
             <!-- TEMPERATURE -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="airTemp">
                 <div class="sensor-header">
                     <div>
-                        <h3>Air Temperature</h3>
+                        <h3>Air Temperature <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Environmental Temp</span>
                     </div>
                     <div class="sensor-icon">°C</div>
@@ -259,10 +268,10 @@
             </div>
 
             <!-- HUMIDITY -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="humidity">
                 <div class="sensor-header">
                     <div>
-                        <h3>Humidity</h3>
+                        <h3>Humidity <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Relative Humidity</span>
                     </div>
                     <div class="sensor-icon">%</div>
@@ -297,10 +306,10 @@
         <div class="sensor-grid">
 
             <!-- PH -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="ph">
                 <div class="sensor-header">
                     <div>
-                        <h3>pH</h3>
+                        <h3>pH <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Acidity Sensor</span>
                     </div>
                     <div class="sensor-icon">pH</div>
@@ -319,10 +328,10 @@
             </div>
 
             <!-- TDS -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="tds">
                 <div class="sensor-header">
                     <div>
-                        <h3>TDS</h3>
+                        <h3>TDS <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Total Dissolved Solids</span>
                     </div>
                     <div class="sensor-icon">TDS</div>
@@ -341,10 +350,10 @@
             </div>
 
             <!-- TURBIDITY -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="turbidity">
                 <div class="sensor-header">
                     <div>
-                        <h3>Turbidity</h3>
+                        <h3>Turbidity <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>Water Clarity</span>
                     </div>
                     <div class="sensor-icon">NTU</div>
@@ -378,10 +387,10 @@
 
         <div class="sensor-grid">
             <!-- PI 4 TEMP -->
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-type="pi4Temp">
                 <div class="sensor-header">
                     <div>
-                        <h3>Pi 4 Temperature</h3>
+                        <h3>Pi 4 Temperature <span class="health-info-badge">ⓘ Impact</span></h3>
                         <span>CPU / Sensor Temp</span>
                     </div>
                     <div class="sensor-icon">°C</div>
@@ -455,16 +464,52 @@
     </section>
 
 
-    <!-- ================= ALERTS ================= -->
-    <section class="alert-section" id="alerts">
-        <div>
-            <h3>System Status</h3>
-            <p id="alertDescription">
-                All connected backend sensor tables are receiving data normally.
-            </p>
+    <!-- ================= ALERTS & EMAIL NOTIFICATIONS ================= -->
+    <section class="section" id="alerts">
+        <div class="section-header">
+            <div>
+                <h2>Safety & Email Alerts</h2>
+                <p>Automated SMTP alert dispatcher & system notifications</p>
+            </div>
+            <span class="section-badge">SMTP ALERTS</span>
         </div>
-        <div class="system-ok" id="systemOkBadge">
-            ● All Systems Normal
+
+        <div class="alerts-container">
+            <!-- SYSTEM STATUS BAR -->
+            <div class="alert-section">
+                <div>
+                    <h3>System Status</h3>
+                    <p id="alertDescription">
+                        All connected backend sensor tables are receiving data normally.
+                    </p>
+                </div>
+                <div class="system-ok" id="systemOkBadge">
+                    ● All Systems Normal
+                </div>
+            </div>
+
+            <!-- SMTP EMAIL TEST CARD -->
+            <div class="email-alert-card">
+                <div class="email-card-header">
+                    <div>
+                        <h3>✉️ SMTP Email Alert System</h3>
+                        <p>Triggers instant email alerts when classroom health thresholds are breached</p>
+                    </div>
+                    <span class="smtp-status-tag" id="smtpStatusBadge">● Checking SMTP...</span>
+                </div>
+
+                <div class="email-test-controls">
+                    <div class="input-group">
+                        <input type="email" id="testEmailInput" placeholder="Enter recipient email address..." />
+                        <button id="btnSendTestEmail" class="btn-primary-email">
+                            <span>📧 Send Test Alert</span>
+                        </button>
+                    </div>
+                    <p class="email-hint" id="emailTestFeedback">
+                        * Thresholds: CO₂ > 1200 ppm, Air Temp > 40°C, PM2.5 > 35 µg/m³, pH out of 6.0-9.0, Pi 4 Temp > 75°C.
+                    </p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -475,6 +520,33 @@
     </footer>
 
 </main>
+
+<!-- Dynamic Student Health Impact Tooltip -->
+<div id="healthImpactTooltip" class="health-impact-tooltip hidden">
+    <div class="tooltip-header">
+        <span class="tooltip-icon" id="tooltipIcon">🫁</span>
+        <div>
+            <h4 id="tooltipTitle">Parameter Name</h4>
+            <span class="tooltip-subtitle" id="tooltipSubtitle">Sensor Metric</span>
+        </div>
+    </div>
+
+    <div class="tooltip-body">
+        <div class="tooltip-ideal-box">
+            <span class="tooltip-label">IDEAL CLASSROOM VALUE</span>
+            <div class="tooltip-value-highlight" id="tooltipIdeal">--</div>
+        </div>
+
+        <div class="tooltip-harm-box">
+            <span class="tooltip-label harm">HEALTH IMPACT IF IN EXCESS</span>
+            <p id="tooltipHarmText">--</p>
+        </div>
+    </div>
+
+    <div class="tooltip-footer">
+        <span class="research-tag">🧪 Thresholds under active research for student safety</span>
+    </div>
+</div>
 
 <script src="script.js"></script>
 </body>

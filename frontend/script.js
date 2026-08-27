@@ -355,14 +355,249 @@ function updateConnectionStatus(isOnline) {
     }
 }
 
+
 // ==========================================
-// MAIN POLLING LOOP
+// STUDENT HEALTH IMPACT & CLASSROOM TARGET REGISTRY
+// ==========================================
+const HEALTH_IMPACT_DATA = {
+    co2: {
+        name: "Carbon Dioxide (CO₂)",
+        subtitle: "Indoor Air Quality & Ventilation",
+        icon: "🫁",
+        ideal: "400 – 800 ppm (Optimal for memory focus)",
+        harm: "Excess CO₂ (>1000-1200 ppm) leads to drowsiness, lethargy, reduced attention span, headaches, and lower academic test performance in students."
+    },
+    pm25: {
+        name: "PM2.5 Fine Particulates",
+        subtitle: "Microscopic Inhalable Particles",
+        icon: "💨",
+        ideal: "< 12 µg/m³ (WHO Classroom Target)",
+        harm: "Inhaled deep into young lungs; causes asthma flare-ups, airway inflammation, coughing, fatigue, and decreased lung function."
+    },
+    pm10: {
+        name: "PM10 Coarse Particulates",
+        subtitle: "Dust, Pollen & Mold Spores",
+        icon: "🌫️",
+        ideal: "< 45 µg/m³ (Safe Ambient Limit)",
+        harm: "Irritates eyes, nose, and throat; triggers allergic reactions, sneezing, and respiratory irritation during school activities."
+    },
+    voc: {
+        name: "Air Quality Index / VOCs",
+        subtitle: "Volatile Organic Compounds",
+        icon: "🍃",
+        ideal: "0 – 50 Index (Good Air Quality)",
+        harm: "Off-gassing from markers, paints, and cleaners causes dizziness, nausea, eye strain, and impaired cognitive concentration."
+    },
+    airTemp: {
+        name: "Classroom Air Temperature",
+        subtitle: "Thermal Comfort & Climate Control",
+        icon: "🌡️",
+        ideal: "20°C – 23°C (68°F – 74°F)",
+        harm: "Excessive heat (>40°C critical limit) causes severe heat stress, dehydration, lethargy, decreased memory retention, and fainting risks."
+    },
+    humidity: {
+        name: "Relative Air Humidity",
+        subtitle: "Classroom Moisture Level",
+        icon: "💧",
+        ideal: "30% – 50% Relative Humidity",
+        harm: "High humidity (>60%) breeds indoor mold spores & dust mites (allergies); low humidity (<30%) causes dry mucosa, skin itch, & virus survival."
+    },
+    ph: {
+        name: "Drinking Water pH",
+        subtitle: "Acidity / Alkalinity Balance",
+        icon: "🧪",
+        ideal: "6.5 – 8.5 pH (Safe Potable Range)",
+        harm: "Acidic (<6.5) or alkaline (>8.5) water causes stomach discomfort, mouth/throat irritation, and heavy metal corrosion in school pipes."
+    },
+    tds: {
+        name: "Total Dissolved Solids (TDS)",
+        subtitle: "Drinking Water Mineral Level",
+        icon: "💧",
+        ideal: "< 300 ppm (Fresh Drinking Water)",
+        harm: "Elevated dissolved minerals (>500 ppm) produce an unpalatable metallic taste, kidney strain, and gastrointestinal upset in children."
+    },
+    turbidity: {
+        name: "Water Turbidity",
+        subtitle: "Water Clarity & Sediment",
+        icon: "🌊",
+        ideal: "< 1.0 NTU (Crystal Clear)",
+        harm: "Cloudy water indicates sediment or potential microbial pathogens, carrying risks of bacterial gastroenteritis and stomach illness."
+    },
+    pi4Temp: {
+        name: "Pi 4 Monitoring Node Temp",
+        subtitle: "Telemetry Hardware Status",
+        icon: "🥧",
+        ideal: "< 60°C (Normal Operating Temp)",
+        harm: "Overheating (>75°C) risks telemetry node crashes, disabling continuous environmental & safety alerts for the classroom."
+    }
+};
+
+
+// ==========================================
+// TOOLTIP HOVER HANDLER
+// ==========================================
+function initHealthImpactTooltips() {
+    const tooltip = document.getElementById("healthImpactTooltip");
+    const iconElem = document.getElementById("tooltipIcon");
+    const titleElem = document.getElementById("tooltipTitle");
+    const subtitleElem = document.getElementById("tooltipSubtitle");
+    const idealElem = document.getElementById("tooltipIdeal");
+    const harmElem = document.getElementById("tooltipHarmText");
+
+    if (!tooltip) return;
+
+    const sensorCards = document.querySelectorAll("[data-sensor-type]");
+
+    sensorCards.forEach(card => {
+        card.addEventListener("mouseenter", (e) => {
+            const type = card.getAttribute("data-sensor-type");
+            const info = HEALTH_IMPACT_DATA[type];
+
+            if (!info) return;
+
+            if (iconElem) iconElem.textContent = info.icon;
+            if (titleElem) titleElem.textContent = info.name;
+            if (subtitleElem) subtitleElem.textContent = info.subtitle;
+            if (idealElem) idealElem.textContent = info.ideal;
+            if (harmElem) harmElem.textContent = info.harm;
+
+            tooltip.classList.remove("hidden");
+            positionTooltip(e);
+        });
+
+        card.addEventListener("mousemove", (e) => {
+            positionTooltip(e);
+        });
+
+        card.addEventListener("mouseleave", () => {
+            tooltip.classList.add("hidden");
+        });
+    });
+
+    function positionTooltip(e) {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        const tooltipWidth = tooltip.offsetWidth || 320;
+        const tooltipHeight = tooltip.offsetHeight || 220;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        let left = mouseX + 18;
+        let top = mouseY + 18;
+
+        if (left + tooltipWidth > windowWidth - 20) {
+            left = mouseX - tooltipWidth - 18;
+        }
+
+        if (top + tooltipHeight > windowHeight - 20) {
+            top = mouseY - tooltipHeight - 18;
+        }
+
+        tooltip.style.left = `${Math.max(10, left)}px`;
+        tooltip.style.top = `${Math.max(10, top)}px`;
+    }
+}
+
+
+// ==========================================
+// SMTP EMAIL ALERT STATUS & TEST TRIGGER
+// ==========================================
+async function fetchSmtpStatus() {
+    const badge = document.getElementById("smtpStatusBadge");
+    if (!badge) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/alerts/status`, { headers: FETCH_HEADERS });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.is_configured) {
+                badge.textContent = "● SMTP Active";
+                badge.className = "smtp-status-tag active";
+            } else {
+                badge.textContent = "● SMTP Unconfigured (.env)";
+                badge.className = "smtp-status-tag inactive";
+            }
+        }
+    } catch (err) {
+        badge.textContent = "● Backend Link Standby";
+        badge.className = "smtp-status-tag";
+    }
+}
+
+function initEmailAlertSystem() {
+    const btnTest = document.getElementById("btnSendTestEmail");
+    const inputEmail = document.getElementById("testEmailInput");
+    const feedbackElem = document.getElementById("emailTestFeedback");
+
+    if (!btnTest) return;
+
+    btnTest.addEventListener("click", async () => {
+        const targetEmail = inputEmail ? inputEmail.value.trim() : "";
+        btnTest.disabled = true;
+        btnTest.innerHTML = "<span>⌛ Sending Alert...</span>";
+
+        if (feedbackElem) {
+            feedbackElem.textContent = "Connecting to backend SMTP dispatcher...";
+            feedbackElem.className = "email-hint";
+        }
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/alerts/test-email`, {
+                method: "POST",
+                headers: FETCH_HEADERS,
+                body: JSON.stringify({ to_email: targetEmail })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.status === "success") {
+                if (feedbackElem) {
+                    feedbackElem.textContent = `✓ ${data.message}`;
+                    feedbackElem.className = "email-hint success";
+                }
+            } else if (data.status === "warning") {
+                if (feedbackElem) {
+                    feedbackElem.textContent = `⚠️ ${data.message}`;
+                    feedbackElem.className = "email-hint warning";
+                }
+            } else {
+                if (feedbackElem) {
+                    feedbackElem.textContent = `❌ ${data.message || "Failed to send test email alert."}`;
+                    feedbackElem.className = "email-hint error";
+                }
+            }
+        } catch (err) {
+            if (feedbackElem) {
+                feedbackElem.textContent = `❌ Error: Could not reach backend server at ${API_BASE_URL}. Ensure Flask app is running.`;
+                feedbackElem.className = "email-hint error";
+            }
+        } finally {
+            btnTest.disabled = false;
+            btnTest.innerHTML = "<span>📧 Send Test Alert</span>";
+            fetchSmtpStatus();
+        }
+    });
+}
+
+
+// ==========================================
+// MAIN POLLING LOOP & INIT
 // ==========================================
 async function refreshDashboard() {
     await fetchLatestReadings();
     await fetchHistoricalTrends();
     await fetchHealth();
+    await fetchSmtpStatus();
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    initHealthImpactTooltips();
+    initEmailAlertSystem();
+});
+
+// Initial Tooltip & Email Setup
+initHealthImpactTooltips();
+initEmailAlertSystem();
 
 // Initial Fetch
 refreshDashboard();

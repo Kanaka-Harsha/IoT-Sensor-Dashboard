@@ -914,3 +914,304 @@ footer {
     }
 
 }
+
+
+/* ================= STUDENT HEALTH IMPACT HOVER & BADGES ================= */
+
+[data-sensor-type] {
+    cursor: pointer;
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-sensor-type]:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.15), 0 8px 10px -6px rgba(59, 130, 246, 0.1) !important;
+    transform: translateY(-3px) scale(1.01);
+}
+
+.card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 9px;
+}
+
+.card-top-row .overview-title {
+    margin-bottom: 0;
+}
+
+.health-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 8.5px;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    padding: 2px 7px;
+    border-radius: 12px;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+[data-sensor-type]:hover .health-info-badge {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+/* Floating Glassmorphic Tooltip */
+.health-impact-tooltip {
+    position: fixed;
+    z-index: 10000;
+    width: 320px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.15);
+    pointer-events: none;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.health-impact-tooltip.hidden {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+    pointer-events: none;
+}
+
+.tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 12px;
+}
+
+.tooltip-icon {
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.08);
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.tooltip-header h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.tooltip-subtitle {
+    font-size: 10px;
+    color: #94a3b8;
+    display: block;
+    margin-top: 2px;
+}
+
+.tooltip-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tooltip-label {
+    display: block;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #64748b;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.tooltip-label.harm {
+    color: #f87171;
+}
+
+.tooltip-ideal-box {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 8px;
+    padding: 9px 12px;
+}
+
+.tooltip-value-highlight {
+    font-size: 13px;
+    font-weight: 700;
+    color: #34d399;
+}
+
+.tooltip-harm-box {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.tooltip-harm-box p {
+    font-size: 11px;
+    color: #fecdd3;
+    line-height: 1.45;
+}
+
+.tooltip-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.research-tag {
+    font-size: 9px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-style: italic;
+}
+
+
+/* ================= SMTP ALERTS CONTAINER & CONTROL ================= */
+
+.alerts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.email-alert-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.email-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.email-card-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.email-card-header p {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.smtp-status-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.smtp-status-tag.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.smtp-status-tag.inactive {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.email-test-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.input-group input[type="email"] {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group input[type="email"]:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.btn-primary-email {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-primary-email:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.btn-primary-email:active {
+    transform: translateY(0);
+}
+
+.email-hint {
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.email-hint.success {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.email-hint.warning {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.email-hint.error {
+    color: #dc2626;
+    font-weight: 600;
+}
