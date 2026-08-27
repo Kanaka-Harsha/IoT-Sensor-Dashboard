@@ -23,7 +23,10 @@ let sensorData = {
     ph: null,
     tds: null,
     turbidity: null,
-    pi4Temp: null
+    pi4Temp: null,
+    pi4Humidity: null,
+    pi4Pressure: null,
+    pi4Gas: null
 };
 
 // ==========================================
@@ -91,9 +94,27 @@ function updateValues() {
         document.getElementById("turbidity").textContent = sensorData.turbidity !== null ? sensorData.turbidity.toFixed(1) : "--";
     }
 
-    // Raspberry Pi 4
+    // Raspberry Pi 4 Suite
     if (document.getElementById("pi4Temp")) {
-        document.getElementById("pi4Temp").textContent = sensorData.pi4Temp !== null ? sensorData.pi4Temp.toFixed(1) : "--";
+        document.getElementById("pi4Temp").textContent = sensorData.pi4Temp !== null ? Number(sensorData.pi4Temp).toFixed(1) : "--";
+    }
+    if (document.getElementById("pi4Humidity")) {
+        document.getElementById("pi4Humidity").textContent = sensorData.pi4Humidity !== null ? Number(sensorData.pi4Humidity).toFixed(1) : "--";
+    }
+    if (document.getElementById("pi4Pressure")) {
+        document.getElementById("pi4Pressure").textContent = sensorData.pi4Pressure !== null ? Number(sensorData.pi4Pressure).toFixed(1) : "--";
+    }
+    if (document.getElementById("pi4Gas")) {
+        if (sensorData.pi4Gas !== null) {
+            const numGas = Number(sensorData.pi4Gas);
+            if (!isNaN(numGas)) {
+                document.getElementById("pi4Gas").textContent = numGas >= 1000 ? (numGas / 1000).toFixed(1) + " k" : Math.round(numGas) + " ";
+            } else {
+                document.getElementById("pi4Gas").textContent = sensorData.pi4Gas;
+            }
+        } else {
+            document.getElementById("pi4Gas").textContent = "--";
+        }
     }
 
     // Scores Overview
@@ -104,7 +125,7 @@ function updateValues() {
         document.getElementById("waterScore").textContent = sensorData.ph !== null ? sensorData.ph.toFixed(1) : "--";
     }
     if (document.getElementById("pi4Score")) {
-        document.getElementById("pi4Score").textContent = sensorData.pi4Temp !== null ? sensorData.pi4Temp.toFixed(1) : "--";
+        document.getElementById("pi4Score").textContent = sensorData.pi4Temp !== null ? Number(sensorData.pi4Temp).toFixed(1) : "--";
     }
 
     // Progress Bars
@@ -140,9 +161,22 @@ function updateValues() {
         document.getElementById("phIndicator").style.left = phPosition + "%";
     }
 
-    // Pi 4 Temp Bar
+    // Pi 4 Telemetry Bars
     if (sensorData.pi4Temp !== null && document.getElementById("pi4TempBar")) {
-        document.getElementById("pi4TempBar").style.width = Math.min(sensorData.pi4Temp / 80 * 100, 100) + "%";
+        const t = Number(sensorData.pi4Temp);
+        if (!isNaN(t)) document.getElementById("pi4TempBar").style.width = Math.min(t / 80 * 100, 100) + "%";
+    }
+    if (sensorData.pi4Humidity !== null && document.getElementById("pi4HumidityBar")) {
+        const h = Number(sensorData.pi4Humidity);
+        if (!isNaN(h)) document.getElementById("pi4HumidityBar").style.width = Math.min(h, 100) + "%";
+    }
+    if (sensorData.pi4Pressure !== null && document.getElementById("pi4PressureBar")) {
+        const p = Number(sensorData.pi4Pressure);
+        if (!isNaN(p)) document.getElementById("pi4PressureBar").style.width = Math.max(0, Math.min((p - 950) / 100 * 100, 100)) + "%";
+    }
+    if (sensorData.pi4Gas !== null && document.getElementById("pi4GasBar")) {
+        const g = Number(sensorData.pi4Gas);
+        if (!isNaN(g)) document.getElementById("pi4GasBar").style.width = Math.min(g / 100000 * 100, 100) + "%";
     }
 
     // Update Status Labels
@@ -173,9 +207,34 @@ function updateValues() {
     }
 
     if (sensorData.pi4Temp !== null) {
-        if (sensorData.pi4Temp < 60) setStatus("pi4TempStatus", "Normal", "good");
-        else if (sensorData.pi4Temp < 75) setStatus("pi4TempStatus", "Warm", "warning");
-        else setStatus("pi4TempStatus", "Hot", "danger");
+        const t = Number(sensorData.pi4Temp);
+        if (!isNaN(t)) {
+            if (t < 60) setStatus("pi4TempStatus", "Normal", "good");
+            else if (t < 75) setStatus("pi4TempStatus", "Warm", "warning");
+            else setStatus("pi4TempStatus", "Hot", "danger");
+        }
+    }
+    if (sensorData.pi4Humidity !== null) {
+        const h = Number(sensorData.pi4Humidity);
+        if (!isNaN(h)) {
+            if (h >= 30 && h <= 50) setStatus("pi4HumidityStatus", "Normal", "good");
+            else setStatus("pi4HumidityStatus", "Check", "warning");
+        }
+    }
+    if (sensorData.pi4Pressure !== null) {
+        const p = Number(sensorData.pi4Pressure);
+        if (!isNaN(p)) {
+            if (p >= 1000 && p <= 1030) setStatus("pi4PressureStatus", "Normal", "good");
+            else setStatus("pi4PressureStatus", "Notice", "warning");
+        }
+    }
+    if (sensorData.pi4Gas !== null) {
+        const g = Number(sensorData.pi4Gas);
+        if (!isNaN(g)) {
+            if (g >= 30000) setStatus("pi4GasStatus", "Optimal", "good");
+            else if (g >= 10000) setStatus("pi4GasStatus", "Good", "good");
+            else setStatus("pi4GasStatus", "Warning", "danger");
+        }
     }
 }
 
@@ -261,8 +320,13 @@ async function fetchLatestReadings() {
             if (water.tds_ppm !== undefined) sensorData.tds = water.tds_ppm;
             if (water.turbidity !== undefined) sensorData.turbidity = water.turbidity;
 
-            // Update Pi 4 Temp State
+            // Update Pi 4 Telemetry State
             if (pi4.temperature_c !== undefined) sensorData.pi4Temp = pi4.temperature_c;
+            else if (pi4.temp !== undefined) sensorData.pi4Temp = pi4.temp;
+
+            if (pi4.humidity !== undefined) sensorData.pi4Humidity = pi4.humidity;
+            if (pi4.pressure !== undefined) sensorData.pi4Pressure = pi4.pressure;
+            if (pi4.gas_resistance !== undefined) sensorData.pi4Gas = pi4.gas_resistance;
 
             updateValues();
             updateConnectionStatus(true);
@@ -429,6 +493,27 @@ const HEALTH_IMPACT_DATA = {
         icon: "🥧",
         ideal: "< 60°C (Normal Operating Temp)",
         harm: "Overheating (>75°C) risks telemetry node crashes, disabling continuous environmental & safety alerts for the classroom."
+    },
+    pi4Humidity: {
+        name: "Pi 4 Node Moisture Level",
+        subtitle: "BME Sensor Relative Humidity",
+        icon: "💧",
+        ideal: "30% – 50% Relative Humidity",
+        harm: "Low humidity (<30%) causes throat dryness & skin itch; high humidity (>60%) triggers indoor mold spores and dust mites."
+    },
+    pi4Pressure: {
+        name: "Barometric Air Pressure",
+        subtitle: "Atmospheric Barometer Sensor",
+        icon: "⏲️",
+        ideal: "1005 – 1025 hPa (Standard Sea Level)",
+        harm: "Rapid atmospheric pressure drops trigger severe migraines, headaches, sinus pain, and lethargy in sensitive students."
+    },
+    pi4Gas: {
+        name: "Gas Resistance (VOC Air)",
+        subtitle: "Volatile Organic Chemical Sensor",
+        icon: "🧪",
+        ideal: "> 50 kΩ (High Resistance = Clean Air)",
+        harm: "Low gas resistance (<10 kΩ) indicates airborne volatile chemicals, solvent vapors, or poor classroom ventilation causing dizziness and headaches."
     }
 };
 

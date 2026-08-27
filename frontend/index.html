@@ -380,9 +380,9 @@
         <div class="section-header">
             <div>
                 <h2>Raspberry Pi 4 Node</h2>
-                <p>Dedicated Pi 4 temperature telemetry</p>
+                <p>Real-time Pi 4 environmental telemetry (BME680 suite)</p>
             </div>
-            <span class="section-badge">PI 4</span>
+            <span class="section-badge">PI 4 SENSORS</span>
         </div>
 
         <div class="sensor-grid">
@@ -390,8 +390,8 @@
             <div class="sensor-card" data-sensor-type="pi4Temp">
                 <div class="sensor-header">
                     <div>
-                        <h3>Pi 4 Temperature <span class="health-info-badge">ⓘ Impact</span></h3>
-                        <span>CPU / Sensor Temp</span>
+                        <h3>Pi 4 Temp <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>Node Hardware Temp</span>
                     </div>
                     <div class="sensor-icon">°C</div>
                 </div>
@@ -404,7 +404,73 @@
                 </div>
                 <div class="sensor-footer">
                     <span>System Temperature</span>
-                    <strong id="pi4TempStatus" class="status-good">● Online</strong>
+                    <strong id="pi4TempStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- PI 4 HUMIDITY -->
+            <div class="sensor-card" data-sensor-type="pi4Humidity">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Pi 4 Humidity <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>Node Relative Humidity</span>
+                    </div>
+                    <div class="sensor-icon">%</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="pi4Humidity">--</strong>
+                    <span>%</span>
+                </div>
+                <div class="progress">
+                    <div id="pi4HumidityBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Relative moisture</span>
+                    <strong id="pi4HumidityStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- BAROMETRIC PRESSURE -->
+            <div class="sensor-card" data-sensor-type="pi4Pressure">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Pressure <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>Barometric Pressure</span>
+                    </div>
+                    <div class="sensor-icon">hPa</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="pi4Pressure">--</strong>
+                    <span>hPa</span>
+                </div>
+                <div class="progress">
+                    <div id="pi4PressureBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Atmospheric pressure</span>
+                    <strong id="pi4PressureStatus" class="status-good">● Normal</strong>
+                </div>
+            </div>
+
+            <!-- GAS RESISTANCE -->
+            <div class="sensor-card" data-sensor-type="pi4Gas">
+                <div class="sensor-header">
+                    <div>
+                        <h3>Gas Resistance <span class="health-info-badge">ⓘ Impact</span></h3>
+                        <span>VOC Gas Sensor</span>
+                    </div>
+                    <div class="sensor-icon">kΩ</div>
+                </div>
+                <div class="sensor-value">
+                    <strong id="pi4Gas">--</strong>
+                    <span>kΩ / Ω</span>
+                </div>
+                <div class="progress">
+                    <div id="pi4GasBar"></div>
+                </div>
+                <div class="sensor-footer">
+                    <span>Gas sensor resistance</span>
+                    <strong id="pi4GasStatus" class="status-good">● Optimal</strong>
                 </div>
             </div>
         </div>
