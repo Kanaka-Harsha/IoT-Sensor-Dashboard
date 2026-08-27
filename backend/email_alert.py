@@ -11,9 +11,20 @@ logger = logging.getLogger("flask_app")
 # In-memory alert cooldown tracker: { sensor_key: last_sent_datetime }
 ALERT_COOLDOWNS = {}
 
+# Runtime-overridden recipient list (from dashboard UI)
+_RUNTIME_RECIPIENTS = None
+
+
+def update_runtime_recipients(recipients):
+    """Allows the dashboard to override alert recipients at runtime."""
+    global _RUNTIME_RECIPIENTS
+    _RUNTIME_RECIPIENTS = [r.strip() for r in recipients if r.strip()]
+    logger.info(f"[SMTP] Runtime alert recipients updated: {_RUNTIME_RECIPIENTS}")
+
 
 def get_smtp_config():
     """Reads SMTP configuration from environment variables."""
+    env_recipients = [r.strip() for r in os.getenv("ALERT_RECIPIENT_EMAILS", "").split(",") if r.strip()]
     return {
         "enabled": os.getenv("SMTP_ENABLED", "true").lower() == "true",
         "host": os.getenv("SMTP_HOST", "smtp.gmail.com"),
@@ -22,7 +33,7 @@ def get_smtp_config():
         "user": os.getenv("SMTP_USER", ""),
         "password": os.getenv("SMTP_PASSWORD", ""),
         "sender": os.getenv("SMTP_SENDER", os.getenv("SMTP_USER", "alert@schoolenv.org")),
-        "recipients": [r.strip() for r in os.getenv("ALERT_RECIPIENT_EMAILS", "").split(",") if r.strip()],
+        "recipients": _RUNTIME_RECIPIENTS if _RUNTIME_RECIPIENTS else env_recipients,
         "cooldown_minutes": int(os.getenv("ALERT_COOLDOWN_MINUTES", "5"))
     }
 
@@ -316,6 +327,71 @@ def check_sensor_thresholds(sensor_category, data):
                         "Ohms",
                         "> 50,000 Ohms",
                         "Low gas resistance indicates high concentration of airborne volatile organic compounds or chemical fumes in the classroom."
+                    )
+            except (ValueError, TypeError):
+                pass
+
+    elif sensor_category == "washroom":
+        # VOC AQI
+        voc_aqi = data.get("voc_aqi") or data.get("voc") or data.get("aqi")
+        if voc_aqi is not None:
+            try:
+                if float(voc_aqi) > 150:
+                    check_and_trigger_alert(
+                        "washroom_voc_high",
+                        "Washroom VOC Air Quality",
+                        round(float(voc_aqi)),
+                        "AQI",
+                        "< 50 AQI",
+                        "High volatile organic compounds in washroom indicate poor ventilation, toxic fume buildup, and potential respiratory harm to students."
+                    )
+            except (ValueError, TypeError):
+                pass
+
+        # Equivalent CO2
+        eq_co2 = data.get("eq_co2") or data.get("eco2") or data.get("equivalent_co2")
+        if eq_co2 is not None:
+            try:
+                if float(eq_co2) > 1500:
+                    check_and_trigger_alert(
+                        "washroom_eco2_high",
+                        "Washroom Equivalent CO₂",
+                        round(float(eq_co2)),
+                        "ppm",
+                        "< 1000 ppm",
+                        "Elevated eCO₂ in washrooms signals dangerously poor ventilation, causing dizziness, nausea, and headaches in students."
+                    )
+            except (ValueError, TypeError):
+                pass
+
+        # Gas sensor (high = bad smell / contamination)
+        gas = data.get("gas_sensor") or data.get("gas")
+        if gas is not None:
+            try:
+                if float(gas) > 300:
+                    check_and_trigger_alert(
+                        "washroom_gas_high",
+                        "Washroom Gas Contamination",
+                        round(float(gas)),
+                        "raw",
+                        "< 100 raw",
+                        "High gas sensor readings indicate airborne contaminants, sewer gas leaks, or chemical exposure risk in washroom facilities."
+                    )
+            except (ValueError, TypeError):
+                pass
+
+        # Smell index
+        smell = data.get("smell") or data.get("smell_index")
+        if smell is not None:
+            try:
+                if float(smell) > 7:
+                    check_and_trigger_alert(
+                        "washroom_smell_high",
+                        "Washroom Odor Level",
+                        round(float(smell), 1),
+                        "index",
+                        "< 3 index",
+                        "Severe malodor indicates hygiene failure, blocked drainage, or bacterial contamination posing infection risk."
                     )
             except (ValueError, TypeError):
                 pass

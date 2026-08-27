@@ -99,7 +99,10 @@ class TestIoTDashboardBackend(unittest.TestCase):
 
     def test_02c_pi4_temperature_ingestion(self):
         payload = {
-            "temperature": 25.4
+            "temp": 25.4,
+            "humidity": 48.2,
+            "pressure": 1013.25,
+            "gas_resistance": 54200
         }
         response = self.app.post(
             "/api/pi4/temperature",

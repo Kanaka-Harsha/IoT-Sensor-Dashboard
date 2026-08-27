@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from db import init_db, execute_query
-from email_alert import check_sensor_thresholds, send_email_alert, get_smtp_config
+from email_alert import check_sensor_thresholds, send_email_alert, get_smtp_config, update_runtime_recipients
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -237,6 +237,71 @@ def receive_pi4_temperature_data():
 
 
 # =====================================================
+# INGESTION API: WASHROOM HYGIENE (ESP32 NODE 3)
+# =====================================================
+
+@app.route("/washroom-hygiene-data", methods=["POST"])
+@app.route("/api/washroom/hygiene", methods=["POST"])
+def receive_washroom_hygiene_data():
+    data = request.get_json()
+
+    if data is None:
+        return jsonify({"status": "error", "message": "Invalid JSON payload"}), 400
+
+    # Extract washroom hygiene sensor values with fallbacks
+    gas = data.get("gas_sensor") or data.get("gas")
+    smell = data.get("smell") or data.get("smell_index")
+    voc_aqi = data.get("voc_aqi") or data.get("voc") or data.get("aqi")
+    eq_co2 = data.get("eq_co2") or data.get("eco2") or data.get("equivalent_co2")
+
+    sender_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    user_agent = request.headers.get('User-Agent', 'Unknown')
+
+    print("\n========================================")
+    print("   WASHROOM HYGIENE DATA RECEIVED (Node 3)")
+    print("========================================")
+    print("Time              :", datetime.now())
+    print("Sender IP         :", sender_ip)
+    print("User-Agent        :", user_agent)
+    print("Gas Sensor        :", gas if gas is not None else "N/A")
+    print("Smell Index       :", smell if smell is not None else "N/A")
+    print("VOC AQI           :", voc_aqi if voc_aqi is not None else "N/A")
+    print("Equivalent CO2    :", eq_co2 if eq_co2 is not None else "N/A")
+    print("========================================")
+
+    raw_insert_sql = """
+        INSERT INTO washroom_hygiene (
+            gas, smell, voc_aqi, eq_co2
+        ) VALUES (%s, %s, %s, %s)
+        RETURNING id, timestamp;
+    """
+
+    try:
+        inserted = execute_query(
+            raw_insert_sql,
+            (str(gas) if gas is not None else None, str(smell) if smell is not None else None, str(voc_aqi) if voc_aqi is not None else None, str(eq_co2) if eq_co2 is not None else None),
+            fetchone=True,
+            commit=True
+        )
+
+        # Evaluate thresholds for SMTP alerts
+        try:
+            check_sensor_thresholds("washroom", data)
+        except Exception as alert_err:
+            logger.error(f"Error checking washroom thresholds: {alert_err}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Washroom hygiene data received and saved successfully",
+            "inserted_id": inserted["id"],
+            "timestamp": inserted["timestamp"].isoformat() if isinstance(inserted["timestamp"], datetime) else str(inserted["timestamp"])
+        }), 200
+    except Exception as e:
+        logger.error(f"Failed to insert washroom hygiene data: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+
+# =====================================================
 # FRONTEND DASHBOARD APIs (DATA RETRIEVAL)
 # =====================================================
 
@@ -312,27 +377,55 @@ def get_pi4_temperature_data():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route("/api/washroom/hygiene", methods=["GET"])
+def get_washroom_hygiene_data():
+    """Returns recent washroom hygiene records for dashboard visualization."""
+    limit = request.args.get("limit", default=50, type=int)
+    offset = request.args.get("offset", default=0, type=int)
+
+    raw_select_sql = """
+        SELECT id, timestamp, gas, smell, voc_aqi, eq_co2
+        FROM washroom_hygiene
+        ORDER BY timestamp DESC
+        LIMIT %s OFFSET %s;
+    """
+    try:
+        rows = execute_query(raw_select_sql, (limit, offset), fetchall=True)
+        formatted_rows = format_timestamps(rows)
+        return jsonify({
+            "status": "success",
+            "count": len(formatted_rows),
+            "data": formatted_rows
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/api/latest", methods=["GET"])
 def get_latest_readings():
-    """Returns the latest single reading from water, air, and Pi 4 sensors."""
+    """Returns the latest single reading from water, air, Pi 4, and washroom sensors."""
     sql_water = "SELECT * FROM water_quality ORDER BY timestamp DESC LIMIT 1;"
     sql_air = "SELECT * FROM air_quality ORDER BY timestamp DESC LIMIT 1;"
     sql_pi4 = "SELECT * FROM pi4_temperature ORDER BY timestamp DESC LIMIT 1;"
+    sql_washroom = "SELECT * FROM washroom_hygiene ORDER BY timestamp DESC LIMIT 1;"
 
     try:
         latest_water = execute_query(sql_water, fetchone=True)
         latest_air = execute_query(sql_air, fetchone=True)
         latest_pi4 = execute_query(sql_pi4, fetchone=True)
+        latest_washroom = execute_query(sql_washroom, fetchone=True)
 
         latest_water_formatted = format_timestamps([latest_water])[0] if latest_water else None
         latest_air_formatted = format_timestamps([latest_air])[0] if latest_air else None
         latest_pi4_formatted = format_timestamps([latest_pi4])[0] if latest_pi4 else None
+        latest_washroom_formatted = format_timestamps([latest_washroom])[0] if latest_washroom else None
 
         return jsonify({
             "status": "success",
             "water_quality": latest_water_formatted,
             "air_quality": latest_air_formatted,
-            "pi4_temperature": latest_pi4_formatted
+            "pi4_temperature": latest_pi4_formatted,
+            "washroom_hygiene": latest_washroom_formatted
         }), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -345,13 +438,15 @@ def health_check():
         w_count = execute_query("SELECT COUNT(*) as count FROM water_quality;", fetchone=True)["count"]
         a_count = execute_query("SELECT COUNT(*) as count FROM air_quality;", fetchone=True)["count"]
         p_count = execute_query("SELECT COUNT(*) as count FROM pi4_temperature;", fetchone=True)["count"]
+        wh_count = execute_query("SELECT COUNT(*) as count FROM washroom_hygiene;", fetchone=True)["count"]
         return jsonify({
             "status": "healthy",
             "database_connected": True,
             "table_counts": {
                 "water_quality": w_count,
                 "air_quality": a_count,
-                "pi4_temperature": p_count
+                "pi4_temperature": p_count,
+                "washroom_hygiene": wh_count
             }
         }), 200
     except Exception as e:
@@ -383,92 +478,24 @@ def get_alert_status():
     }), 200
 
 
-@app.route("/api/alerts/test-email", methods=["POST"])
-def send_test_email():
-    """Sends a manual test alert email to specified recipient or configured default."""
+@app.route("/api/alerts/update-recipient", methods=["POST"])
+def update_alert_recipient():
+    """Updates the runtime alert recipient email from the dashboard UI."""
     req_data = request.get_json() or {}
-    recipient = req_data.get("to_email") or req_data.get("email")
-    
-    config = get_smtp_config()
-    recipients = [recipient.strip()] if recipient and recipient.strip() else config["recipients"]
+    email = req_data.get("email", "").strip()
 
-    if not recipients:
+    if not email or "@" not in email:
         return jsonify({
             "status": "error",
-            "message": "No recipient email provided or configured in .env (ALERT_RECIPIENT_EMAILS)."
+            "message": "Please provide a valid email address."
         }), 400
 
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    subject = "🔔 [TEST ALERT] SchoolEnv Classroom System Test"
-    
-    text_body = f"""
-==================================================
-SCHOOL ENVIRONMENT MONITORING - EMAIL SYSTEM TEST
-==================================================
+    update_runtime_recipients([email])
 
-This is a test notification from your SchoolEnv Classroom Safety Dashboard.
-
-- Status       : SMTP Gateway Functioning
-- Timestamp    : {now_str}
-- Server Host  : {config['host']}:{config['port']}
-
-Your alert system is ready to notify classroom administrators if environmental parameters exceed safety limits.
-
---
-SchoolEnv Safety Automation Node
-    """.strip()
-
-    html_body = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-    body {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #1e293b; padding: 20px; }}
-    .card {{ background: #ffffff; border-radius: 12px; max-width: 600px; margin: 0 auto; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 6px solid #2563eb; }}
-    .header {{ background: #2563eb; color: white; padding: 20px; font-size: 20px; font-weight: bold; }}
-    .content {{ padding: 24px; }}
-    .badge {{ display: inline-block; background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }}
-    .footer {{ background: #f8fafc; padding: 16px; font-size: 12px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; }}
-</style>
-</head>
-<body>
-    <div class="card">
-        <div class="header">🔔 SchoolEnv Email Alert Test</div>
-        <div class="content">
-            <span class="badge">Test Verified</span>
-            <h2>SMTP Connection Successful</h2>
-            <p>This email confirms that your SMTP gateway is configured and active.</p>
-            <p><strong>Timestamp:</strong> {now_str}</p>
-            <p><strong>Configured Recipients:</strong> {', '.join(recipients)}</p>
-        </div>
-        <div class="footer">
-            SchoolEnv Classroom Environmental Monitoring Node
-        </div>
-    </div>
-</body>
-</html>
-    """.strip()
-
-    # Synchronous attempt for immediate UI feedback on manual button click
-    success = send_email_alert(subject, text_body, html_body, recipient_list=recipients, async_send=False)
-
-    if success:
-        return jsonify({
-            "status": "success",
-            "message": f"Test alert email successfully dispatched to {', '.join(recipients)}!"
-        }), 200
-    else:
-        # Check if missing credentials
-        if not config["user"] or not config["password"]:
-            return jsonify({
-                "status": "warning",
-                "message": "SMTP credentials (SMTP_USER/SMTP_PASSWORD) are not set in backend .env file. Update .env to send real emails."
-            }), 200
-        else:
-            return jsonify({
-                "status": "error",
-                "message": "Failed to connect to SMTP server. Please check your SMTP host, port, username, and password in .env."
-            }), 500
+    return jsonify({
+        "status": "success",
+        "message": f"Alert recipient updated to {email}. Real-time threshold alerts will be sent here."
+    }), 200
 
 
 
