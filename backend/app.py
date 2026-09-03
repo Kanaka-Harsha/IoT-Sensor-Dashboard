@@ -249,10 +249,9 @@ def receive_washroom_hygiene_data():
         return jsonify({"status": "error", "message": "Invalid JSON payload"}), 400
 
     # Extract washroom hygiene sensor values with fallbacks
-    gas = data.get("gas_sensor") or data.get("gas")
-    smell = data.get("smell") or data.get("smell_index")
-    voc_aqi = data.get("voc_aqi") or data.get("voc") or data.get("aqi")
-    eq_co2 = data.get("eq_co2") or data.get("eco2") or data.get("equivalent_co2")
+    gas = data.get("gas_sensor") if data.get("gas_sensor") is not None else data.get("gas")
+    temp_c = data.get("temperature_c") if data.get("temperature_c") is not None else (data.get("temp") if data.get("temp") is not None else data.get("temperature"))
+    humidity = data.get("humidity") if data.get("humidity") is not None else data.get("humidity_pct")
 
     sender_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     user_agent = request.headers.get('User-Agent', 'Unknown')
@@ -264,22 +263,21 @@ def receive_washroom_hygiene_data():
     print("Sender IP         :", sender_ip)
     print("User-Agent        :", user_agent)
     print("Gas Sensor        :", gas if gas is not None else "N/A")
-    print("Smell Index       :", smell if smell is not None else "N/A")
-    print("VOC AQI           :", voc_aqi if voc_aqi is not None else "N/A")
-    print("Equivalent CO2    :", eq_co2 if eq_co2 is not None else "N/A")
+    print("Temperature       :", f"{temp_c} °C" if temp_c is not None else "N/A")
+    print("Humidity          :", f"{humidity} %" if humidity is not None else "N/A")
     print("========================================")
 
     raw_insert_sql = """
         INSERT INTO washroom_hygiene (
-            gas, smell, voc_aqi, eq_co2
-        ) VALUES (%s, %s, %s, %s)
+            gas, temperature_c, humidity
+        ) VALUES (%s, %s, %s)
         RETURNING id, timestamp;
     """
 
     try:
         inserted = execute_query(
             raw_insert_sql,
-            (str(gas) if gas is not None else None, str(smell) if smell is not None else None, str(voc_aqi) if voc_aqi is not None else None, str(eq_co2) if eq_co2 is not None else None),
+            (str(gas) if gas is not None else None, float(temp_c) if temp_c is not None else None, float(humidity) if humidity is not None else None),
             fetchone=True,
             commit=True
         )
@@ -384,7 +382,7 @@ def get_washroom_hygiene_data():
     offset = request.args.get("offset", default=0, type=int)
 
     raw_select_sql = """
-        SELECT id, timestamp, gas, smell, voc_aqi, eq_co2
+        SELECT id, timestamp, gas, temperature_c, humidity
         FROM washroom_hygiene
         ORDER BY timestamp DESC
         LIMIT %s OFFSET %s;

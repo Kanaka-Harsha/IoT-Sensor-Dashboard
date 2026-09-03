@@ -332,40 +332,40 @@ def check_sensor_thresholds(sensor_category, data):
                 pass
 
     elif sensor_category == "washroom":
-        # VOC AQI
-        voc_aqi = data.get("voc_aqi") or data.get("voc") or data.get("aqi")
-        if voc_aqi is not None:
+        # Washroom Temperature
+        temp = data.get("temperature_c") if data.get("temperature_c") is not None else (data.get("temp") if data.get("temp") is not None else data.get("temperature"))
+        if temp is not None:
             try:
-                if float(voc_aqi) > 150:
+                if float(temp) > 38.0:
                     check_and_trigger_alert(
-                        "washroom_voc_high",
-                        "Washroom VOC Air Quality",
-                        round(float(voc_aqi)),
-                        "AQI",
-                        "< 50 AQI",
-                        "High volatile organic compounds in washroom indicate poor ventilation, toxic fume buildup, and potential respiratory harm to students."
+                        "washroom_temp_high",
+                        "Washroom Air Temperature",
+                        round(float(temp), 1),
+                        "°C",
+                        "< 26°C (Upper Safety Limit: 38°C)",
+                        "Excessive washroom heat indicates severe ventilation failure, compounding bacterial growth and heat stress for occupants."
                     )
             except (ValueError, TypeError):
                 pass
 
-        # Equivalent CO2
-        eq_co2 = data.get("eq_co2") or data.get("eco2") or data.get("equivalent_co2")
-        if eq_co2 is not None:
+        # Washroom Humidity
+        humidity = data.get("humidity") if data.get("humidity") is not None else data.get("humidity_pct")
+        if humidity is not None:
             try:
-                if float(eq_co2) > 1500:
+                if float(humidity) > 80.0:
                     check_and_trigger_alert(
-                        "washroom_eco2_high",
-                        "Washroom Equivalent CO₂",
-                        round(float(eq_co2)),
-                        "ppm",
-                        "< 1000 ppm",
-                        "Elevated eCO₂ in washrooms signals dangerously poor ventilation, causing dizziness, nausea, and headaches in students."
+                        "washroom_humidity_high",
+                        "Washroom Relative Humidity",
+                        round(float(humidity), 1),
+                        "%",
+                        "< 70%",
+                        "High dampness and moisture foster mold spore propagation, black mold proliferation, and slippery floor hazards."
                     )
             except (ValueError, TypeError):
                 pass
 
-        # Gas sensor (high = bad smell / contamination)
-        gas = data.get("gas_sensor") or data.get("gas")
+        # Gas sensor (high = airborne contamination / sewer gas)
+        gas = data.get("gas_sensor") if data.get("gas_sensor") is not None else data.get("gas")
         if gas is not None:
             try:
                 if float(gas) > 300:
@@ -376,22 +376,6 @@ def check_sensor_thresholds(sensor_category, data):
                         "raw",
                         "< 100 raw",
                         "High gas sensor readings indicate airborne contaminants, sewer gas leaks, or chemical exposure risk in washroom facilities."
-                    )
-            except (ValueError, TypeError):
-                pass
-
-        # Smell index
-        smell = data.get("smell") or data.get("smell_index")
-        if smell is not None:
-            try:
-                if float(smell) > 7:
-                    check_and_trigger_alert(
-                        "washroom_smell_high",
-                        "Washroom Odor Level",
-                        round(float(smell), 1),
-                        "index",
-                        "< 3 index",
-                        "Severe malodor indicates hygiene failure, blocked drainage, or bacterial contamination posing infection risk."
                     )
             except (ValueError, TypeError):
                 pass

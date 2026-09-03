@@ -95,9 +95,8 @@ def init_db():
         id SERIAL PRIMARY KEY,
         timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         gas VARCHAR(50),
-        smell VARCHAR(50),
-        voc_aqi VARCHAR(50),
-        eq_co2 VARCHAR(50)
+        temperature_c REAL,
+        humidity REAL
     );
     """
 
@@ -110,9 +109,8 @@ def init_db():
             cur.execute(create_washroom_hygiene_table)
             # Migration checks: ensure columns exist if table was previously created
             cur.execute("ALTER TABLE washroom_hygiene ADD COLUMN IF NOT EXISTS gas VARCHAR(50);")
-            cur.execute("ALTER TABLE washroom_hygiene ADD COLUMN IF NOT EXISTS smell VARCHAR(50);")
-            cur.execute("ALTER TABLE washroom_hygiene ADD COLUMN IF NOT EXISTS voc_aqi VARCHAR(50);")
-            cur.execute("ALTER TABLE washroom_hygiene ADD COLUMN IF NOT EXISTS eq_co2 VARCHAR(50);")
+            cur.execute("ALTER TABLE washroom_hygiene ADD COLUMN IF NOT EXISTS temperature_c REAL;")
+            cur.execute("ALTER TABLE washroom_hygiene ADD COLUMN IF NOT EXISTS humidity REAL;")
             cur.execute("ALTER TABLE water_quality ADD COLUMN IF NOT EXISTS turbidity REAL;")
             cur.execute("ALTER TABLE pi4_temperature ADD COLUMN IF NOT EXISTS humidity VARCHAR(50);")
             cur.execute("ALTER TABLE pi4_temperature ADD COLUMN IF NOT EXISTS pressure VARCHAR(50);")

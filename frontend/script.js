@@ -5,7 +5,7 @@
 // Configurable API Base URL (Auto-detects localhost vs ngrok)
 const API_BASE_URL = window.API_BASE_URL || (
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-        ? "http://localhost:5000"
+        ? "http://100.30.191.179:5000"
         : "https://casually-override-childlike.ngrok-free.dev"
 );
 

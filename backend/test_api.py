@@ -115,6 +115,23 @@ class TestIoTDashboardBackend(unittest.TestCase):
             self.assertEqual(data["status"], "success")
             self.assertIn("inserted_id", data)
 
+    def test_02d_washroom_hygiene_ingestion(self):
+        payload = {
+            "gas": 145,
+            "temperature_c": 26.4,
+            "humidity": 68.2
+        }
+        response = self.app.post(
+            "/api/washroom/hygiene",
+            data=json.dumps(payload),
+            content_type="application/json"
+        )
+        print("\nWashroom Hygiene Ingestion Response:", response.status_code, response.get_json())
+        if response.status_code == 200:
+            data = response.get_json()
+            self.assertEqual(data["status"], "success")
+            self.assertIn("inserted_id", data)
+
     def test_03_frontend_get_water_quality(self):
         response = self.app.get("/api/water-quality?limit=10")
         print("\nGet Water Quality Response:", response.status_code)
@@ -134,6 +151,14 @@ class TestIoTDashboardBackend(unittest.TestCase):
     def test_04b_frontend_get_pi4_temperature(self):
         response = self.app.get("/api/pi4/temperature?limit=10")
         print("\nGet Pi 4 Temperature Response:", response.status_code)
+        if response.status_code == 200:
+            data = response.get_json()
+            self.assertEqual(data["status"], "success")
+            self.assertIsInstance(data["data"], list)
+
+    def test_04c_frontend_get_washroom_hygiene(self):
+        response = self.app.get("/api/washroom/hygiene?limit=10")
+        print("\nGet Washroom Hygiene Response:", response.status_code)
         if response.status_code == 200:
             data = response.get_json()
             self.assertEqual(data["status"], "success")
