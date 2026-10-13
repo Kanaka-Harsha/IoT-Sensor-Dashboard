@@ -3,9 +3,7 @@
 // =========================================================
 
 // Configurable API Base URL (Auto-detects localhost vs ngrok)
-const API_BASE_URL = "http://100.30.191.179:5000"
-);
-
+const API_BASE_URL = "https://casually-override-childlike.ngrok-free.dev";
 // Default fetch headers
 const FETCH_HEADERS = {
     "Content-Type": "application/json",
